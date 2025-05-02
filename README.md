@@ -1,2 +1,4 @@
-# gitexplain
-GitExplain helps you easily understand and navigate any GitHub repository by using AI to summarize, guide, and answer your questions.
+# GitHub Second Brain
+_An MCP server that feeds your AI models any github repositories._
+
+This MCP server processes github repo into an ai-friendly text format, and let MCP clients directly access and understand code context.
