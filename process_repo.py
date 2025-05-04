@@ -40,13 +40,39 @@ def write_to_file(result: CompletedProcess[str], output_path: str):
         print(f"Successfully saved digest to {output_path}")
         print(summary_block)
 
-def ingest_repo(repo_url: str):
+def is_valid_repo(repo_url: str):
+    return repo_url and "github.com" in repo_url
+
+def is_processed_repo(output_filename: str) -> bool:
+    # This repo will check if the incoming repo was processed
+    folder_path = "data"
+    if not os.path.exists(folder_path):
+        print(f"Error: Folder '{folder_path}' does not exist.")
+        return False
+
+    for root, _, files in os.walk(folder_path):
+        for file in files:
+            print(file)
+            if file == output_filename:
+                return True
+            
+    return False
+
+
+def ingest_repo(repo_url: str) -> bool:
     """
     Processes a GitHub repo URL using the gitingest library (if available)
     and saves the primary content digest to a specified file.
+
+    Return:
+        - True: if the repo wasn't processed and now ingested successfully
+        - False: if the repo was processed or now fail to be ingested
     """
-    if repo_url and "github.com" in repo_url:
+    if is_valid_repo(repo_url):
         output_filename = process_url(repo_url)
+        if is_processed_repo(output_filename):
+            return False
+        
         output_path = os.path.join(OUTPUT_DIR, output_filename)
         print(f"\n--- Starting Git Processing ---")
         print(f"Target Repository: {repo_url}")
@@ -67,13 +93,15 @@ def ingest_repo(repo_url: str):
             else:
                 print("Command failed with error code:", result.returncode)
                 print("Error:", result.stderr)
+                return False
 
         except OSError as e:
             print(f"ERROR: Could not create output directory '{OUTPUT_DIR}': {e}", file=sys.stderr)
-            return
+            return False
         
         except Exception as e:
             print(f"ERROR: An error occurred during processing or file writing: {e}", file=sys.stderr)
             sys.exit(0)
             
         print(f"--- Git Processing Finished ---")
+        return True
