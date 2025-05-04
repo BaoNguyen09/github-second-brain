@@ -1,7 +1,6 @@
 # Synchronous usage
-from gitingest import ingest, ingest_async
-import os, sys
-import asyncio
+import os, sys, subprocess
+from subprocess import CompletedProcess
 
 OUTPUT_DIR = "data"
 
@@ -11,10 +10,37 @@ def process_url(repo_url: str):
     components in the url connected by a hyphen
     """
     path = repo_url[19:] # exclude the part: https://github.com/
-    filename = "-".join(path.split("/"))
+    filename = "-".join(path.split("/")) + ".txt"
     return filename
 
-async def ingest_repo(repo_url: str):
+def write_to_file(result: CompletedProcess[str], output_path: str):
+    # --- Extract and Append Summary ---
+    stdout_content = result.stdout
+    summary_marker = "Summary:"
+    # Find the starting position of "Summary:"
+    summary_start_index = stdout_content.find(summary_marker)
+
+    if summary_start_index != -1:
+        # Extract the text from "Summary:" to the end
+        summary_block = stdout_content[summary_start_index:]
+        summary_block = summary_block.strip() # Remove leading/trailing whitespace
+
+        print(f"Found summary in stdout. Appending to {output_path}...")
+
+        # Get the current content of the file
+        file = open(output_path, "r", encoding='utf-8')
+        content = file.read() # Reads the entire file
+        # print(content)
+        file.close()
+        # Write to the file with summary data
+        file = open(output_path, "w", encoding='utf-8')
+        file.write(summary_block + "\n\n" + content)
+        file.close()
+
+        print(f"Successfully saved digest to {output_path}")
+        print(summary_block)
+
+def ingest_repo(repo_url: str):
     """
     Processes a GitHub repo URL using the gitingest library (if available)
     and saves the primary content digest to a specified file.
@@ -32,21 +58,15 @@ async def ingest_repo(repo_url: str):
             os.makedirs(OUTPUT_DIR, exist_ok=True)
             print(f"Ensured output directory exists: {OUTPUT_DIR}")
 
-            result = asyncio.run(ingest_async("path/to/directory"))
-            summary_data, tree_data, content_data = result
-            # summary_data, tree_data, content_data = await ingest_async(repo_url)
-
-            # concatenate all these data
-            repo_content = "\n\n".join(list(summary_data, tree_data, content_data))
-
-            print(f"Processing finished. Writing digest content to file...")
-            # Write the main content digest to the file
-            with open(output_path, 'w', encoding='utf-8') as f:
-                f.write(repo_content)
-
-            print(f"Successfully saved digest to {output_path}")
-            # Get summary data for debugging
-            print("Summary:", summary_data)
+            # Execute the gitingest command
+            result = subprocess.run(['gitingest', repo_url, '-o', output_path], capture_output=True, text=True)
+            # Check if the command was successful
+            if result.returncode == 0:
+                print("Command executed successfully")
+                write_to_file(result, output_path)
+            else:
+                print("Command failed with error code:", result.returncode)
+                print("Error:", result.stderr)
 
         except OSError as e:
             print(f"ERROR: Could not create output directory '{OUTPUT_DIR}': {e}", file=sys.stderr)
