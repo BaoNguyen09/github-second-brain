@@ -16,29 +16,29 @@ def process_url(repo_url: str):
 def write_to_file(result: CompletedProcess[str], output_path: str):
     # --- Extract and Append Summary ---
     stdout_content = result.stdout
-    summary_marker = "Summary:"
-    # Find the starting position of "Summary:"
+    summary_marker = "Repository:"
+    # Find the starting position of "Repository:"
     summary_start_index = stdout_content.find(summary_marker)
 
     if summary_start_index != -1:
-        # Extract the text from "Summary:" to the end
+        # Extract the text from "Repository:" to the end
         summary_block = stdout_content[summary_start_index:]
         summary_block = summary_block.strip() # Remove leading/trailing whitespace
 
         print(f"Found summary in stdout. Appending to {output_path}...")
+        try: 
+            # Append summary to end of file
+            file = open(output_path, "a", encoding='utf-8')
+            file.write("\n\n--- Summary ---\n")
+            file.write(summary_block)
+            file.close()
 
-        # Get the current content of the file
-        file = open(output_path, "r", encoding='utf-8')
-        content = file.read() # Reads the entire file
-        # print(content)
-        file.close()
-        # Write to the file with summary data
-        file = open(output_path, "w", encoding='utf-8')
-        file.write(summary_block + "\n\n" + content)
-        file.close()
-
-        print(f"Successfully saved digest to {output_path}")
-        print(summary_block)
+            print(f"Successfully saved digest to {output_path}")
+            print(summary_block)
+            
+        except Exception as e:
+            print(f"ERROR: Could not append summary to {output_path}: {e}", file=sys.stderr)
+            return
 
 def is_valid_repo(repo_url: str):
     return repo_url and "github.com" in repo_url
