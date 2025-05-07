@@ -6,6 +6,7 @@ mcp = FastMCP("Github-Second-Brain")
 
 @mcp.resource("ghsb://digest")
 def get_processed_repo() -> str:
+# for now it will just return a hardcoded string
     """Get repository that was processed and stored.
 
     Args:
