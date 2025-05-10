@@ -73,7 +73,7 @@ def ingest_repo(repo_url: str) -> tuple[bool, str, str | None]:
     output_filename = process_url(repo_url)
     output_path = os.path.join(OUTPUT_DIR, output_filename)
     if is_processed_repo(output_filename):
-        return False, "Repository was already processed previously.", output_path
+        return False, "Repository was processed previously.", output_path
     
     print(f"\n--- Starting Git Processing ---")
     print(f"Target Repository: {repo_url}")
