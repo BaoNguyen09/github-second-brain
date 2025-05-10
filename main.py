@@ -24,13 +24,19 @@ async def process_repo(repo_req: RepoRequest, response: Response):
         res = ingest_repo(repo_url_str)
         if res[0]: # Should return True only on successful *new* processing
             response.status_code = status.HTTP_201_CREATED
-            return {"message": f"Repository {repo_url_str} ingested successfully."}
+            return {
+                "message": f"Repository {repo_url_str} ingested successfully.", 
+                "output_path": res[2]
+                }
         
         else:
+            if res[1] == "Repository was processed previously.":
+                return {
+                    "message": res[1],
+                    "output_path": res[2]
+                    }
+            
             # Handle different error cases
-            if res[1] == "Repository was already processed previously.":
-                return {"message": res[1]}
-             
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {"message": res[1]}
         
