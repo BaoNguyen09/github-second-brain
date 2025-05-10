@@ -57,23 +57,24 @@ def is_processed_repo(output_filename: str) -> bool:
             
     return False
 
-def ingest_repo(repo_url: str) -> tuple[bool, str]:
+def ingest_repo(repo_url: str) -> tuple[bool, str, str | None]:
     """
     Processes a GitHub repo URL using the gitingest library (if available)
     and saves the primary content digest to a specified file.
 
     Return:
-        a tuple: (bool_success, status_message)
+        a tuple: (bool_success, status_message, output_path)
+          - output_path: the output path of the text file where processed content is saved to 
 
     """
     if not is_valid_repo(repo_url):
         return False, f"Invalid or non-GitHub URL provided: {repo_url}"
 
     output_filename = process_url(repo_url)
-    if is_processed_repo(output_filename):
-        return False, "Repository was already processed previously."
-    
     output_path = os.path.join(OUTPUT_DIR, output_filename)
+    if is_processed_repo(output_filename):
+        return False, "Repository was already processed previously.", output_path
+    
     print(f"\n--- Starting Git Processing ---")
     print(f"Target Repository: {repo_url}")
     print(f"Output File:       {output_path}")
@@ -91,7 +92,7 @@ def ingest_repo(repo_url: str) -> tuple[bool, str]:
             print("Command executed successfully")
             write_to_file(result, output_path)
             print(f"--- Git Processing Finished ---")
-            return True, "Repository ingested successfully."
+            return True, "Repository ingested successfully.", output_path
         else:
             error_msg = f"gitingest command failed (code {result.returncode}): {result.stderr[:500]}..." # Limit error length
             print(f"ERROR: {error_msg}", file=sys.stderr)
