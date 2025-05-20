@@ -1,8 +1,10 @@
 # Synchronous usage
 import os, sys, subprocess
 from subprocess import CompletedProcess
+import json
 
 OUTPUT_DIR = "data"
+json_file_path = os.path.join("data", "processed_repos.json")
 
 def process_url(repo_url: str):
     """
@@ -48,14 +50,29 @@ def is_processed_repo(output_filename: str) -> bool:
     if not os.path.exists(folder_path):
         print(f"Error: Folder '{folder_path}' does not exist.")
         return False
-
-    for root, _, files in os.walk(folder_path):
-        for file in files:
-            print(file)
-            if file == output_filename:
+    
+    if os.path.exists(json_file_path): # read the file if exists
+        with open(json_file_path, 'r') as openfile:
+            data = json.load(openfile)
+            if output_filename in data:
                 return True
-            
     return False
+
+def save_to_json(output_filename: str):
+    """Store the filename into a json file for faster check
+
+    Args:
+        output_filename: filename storing processed data
+    """
+    data = {}
+    if os.path.exists(json_file_path): # read the file if exists
+        with open(json_file_path, 'r') as openfile:
+            data = json.load(openfile)
+
+    data[output_filename] = None # add another filename into this json file
+    data = json.dumps(data, indent=4)
+    with open(json_file_path, "w") as outfile:
+        outfile.write(data)
 
 def ingest_repo(repo_url: str) -> tuple[bool, str, str | None]:
     """
@@ -91,6 +108,7 @@ def ingest_repo(repo_url: str) -> tuple[bool, str, str | None]:
         if result.returncode == 0:
             print("Command executed successfully")
             write_to_file(result, output_path)
+            save_to_json(output_filename)
             print(f"--- Git Processing Finished ---")
             return True, "Repository ingested successfully.", output_path
         else:
