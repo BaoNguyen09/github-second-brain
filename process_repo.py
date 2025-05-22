@@ -158,3 +158,37 @@ def ingest_repo(repo_url: str) -> Tuple[bool, str, Optional[str]]:
         error_msg = f"An unexpected error occurred during processing: {e}"
         print(f"ERROR: {error_msg}", file=sys.stderr)
         return False, error_msg # General failure status
+    
+def get_directory_structure(repo_url: str) -> str:
+    """
+    Extract the directory tree structure from a processed repository file.
+    
+    Args:
+        repo_url: a string containing a GitHub repository URL
+        
+    Returns:
+        str: the directory tree structure as a string
+        
+    Raises:
+        ValueError: if the repository URL is invalid
+        FileNotFoundError: if the processed file cannot be found
+    """
+ 
+     # Validation step
+    if not is_valid_repo(repo_url):
+        raise ValueError(f"Invalid or non-GitHub URL provided: {repo_url}")
+    output_filename, output_path = process_github_url(repo_url)
+    # Check if this repo was processed, if not run ingest_repo to ingest it
+    if not is_processed_repo(output_filename):
+        ingest_repo(repo_url)
+    # Read the processed file to extract the directory tree
+    dir_tree = ""
+    with open(output_path, "r", encoding='utf-8') as file:
+        for line in file:
+            if "=" in line: # stop at this marker
+                return dir_tree
+            dir_tree += line
+    
+    # If no line with "=" is found, return what we have
+    return dir_tree
+
