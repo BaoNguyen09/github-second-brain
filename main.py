@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Response, status
 from pydantic import BaseModel, HttpUrl
-from process_repo import ingest_repo
+from process_repo import ingest_repo, get_directory_structure
 
 class RepoRequest(BaseModel):
     repo_url: HttpUrl
@@ -45,4 +45,33 @@ async def process_repo(repo_req: RepoRequest, response: Response):
          response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
          return {"message": f"Failed to process repository {repo_url_str} due to an internal error."}
     
-    
+@app.get("/api/v1/dir-tree", status_code=200)
+def get_dir_tree(repo_req: RepoRequest, response: Response):
+    repo_url_str = str(repo_req.repo_url)
+
+    # check if incoming repo was processed
+    try:
+        res = ingest_repo(repo_url_str)
+        if res[0]: # Should return True only on successful *new* processing
+            response.status_code = status.HTTP_201_CREATED
+            # TODO: redirect or forward to process POST request
+            return {
+                "message": f"Repository {repo_url_str} ingested successfully.", 
+                "output_path": res[2]
+                }
+        
+        else:
+            if res[1] == "Repository was processed previously.":
+                return {
+                    "message": "Success",
+                    "directory_tree": get_directory_structure(repo_url_str)
+                    }
+            
+            # Handle different error cases
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {"message": res[1]}
+        
+    except Exception as e:
+         print(f"ERROR in API processing {repo_url_str}: {e}") # Log the error
+         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+         return {"message": f"Failed to process repository {repo_url_str} due to an internal error."}
