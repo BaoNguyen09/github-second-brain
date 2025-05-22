@@ -2,11 +2,12 @@
 import os, sys, subprocess
 from subprocess import CompletedProcess
 import json
+from typing import Tuple, Optional
 
 OUTPUT_DIR = "data"
 json_file_path = os.path.join("data", "processed_repos.json")
 
-def process_url(repo_url: str):
+def process_url(repo_url: str) -> str:
     """
     Processes a GitHub repo URL into a filename using all the path
     components in the url connected by a hyphen
@@ -41,7 +42,7 @@ def write_to_file(result: CompletedProcess[str], output_path: str):
             print(f"ERROR: Could not append summary to {output_path}: {e}", file=sys.stderr)
             return
 
-def is_valid_repo(repo_url: str):
+def is_valid_repo(repo_url: str) -> bool:
     return repo_url and "github.com" in repo_url
 
 def is_processed_repo(output_filename: str) -> bool:
@@ -57,6 +58,20 @@ def is_processed_repo(output_filename: str) -> bool:
             if output_filename in data:
                 return True
     return False
+
+def process_github_url(repo_url: str) -> Tuple[str, str]:
+    """
+    Get the output filename and path given a VALID repo github url
+    
+    Args:
+        repo_url: a string containing a GitHub repository URL
+        
+    Returns:
+        Tuple[str, str]: two string of output filename and path
+        
+    """
+    output_filename = process_url(repo_url)
+    return output_filename, os.path.join(OUTPUT_DIR, output_filename)
 
 def save_to_json(output_filename: str):
     """Store the filename into a json file for faster check
@@ -75,7 +90,18 @@ def save_to_json(output_filename: str):
         outfile.write(data)
 
 def run_gitingest(repo_url: str, output_path: str, output_filename: str) -> bool:
+    """
+    Run the gitingest process seperately
 
+    Args:
+        repo_url: a string of github repo url
+        output_path: a string of the path to processed file
+        output_filename: a string name of the file
+    
+    Return:
+        a bool: status of this process
+
+    """
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     print(f"Ensured output directory exists: {OUTPUT_DIR}")
 
@@ -96,7 +122,7 @@ def run_gitingest(repo_url: str, output_path: str, output_filename: str) -> bool
             os.remove(output_path)
         return False
 
-def ingest_repo(repo_url: str) -> tuple[bool, str, str | None]:
+def ingest_repo(repo_url: str) -> Tuple[bool, str, Optional[str]]:
     """
     Processes a GitHub repo URL using the gitingest library (if available)
     and saves the primary content digest to a specified file.
@@ -108,9 +134,7 @@ def ingest_repo(repo_url: str) -> tuple[bool, str, str | None]:
     """
     if not is_valid_repo(repo_url):
         return False, f"Invalid or non-GitHub URL provided: {repo_url}"
-
-    output_filename = process_url(repo_url)
-    output_path = os.path.join(OUTPUT_DIR, output_filename)
+    output_filename, output_path = process_github_url(repo_url)
     if is_processed_repo(output_filename):
         return False, "Repository was processed previously.", output_path
 
