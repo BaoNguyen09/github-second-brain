@@ -74,6 +74,28 @@ def save_to_json(output_filename: str):
     with open(json_file_path, "w") as outfile:
         outfile.write(data)
 
+def run_gitingest(repo_url: str, output_path: str, output_filename: str) -> bool:
+
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    print(f"Ensured output directory exists: {OUTPUT_DIR}")
+
+    # Execute the gitingest command
+    result = subprocess.run(['gitingest', repo_url, '-o', output_path], capture_output=True, text=True)
+    # Check if the command was successful
+    if result.returncode == 0:
+        print("Command executed successfully")
+        write_to_file(result, output_path)
+        save_to_json(output_filename)
+        print(f"--- Git Processing Finished ---")
+        return True
+    else:
+        error_msg = f"gitingest command failed (code {result.returncode}): {result.stderr[:500]}..." # Limit error length
+        print(f"ERROR: {error_msg}", file=sys.stderr)
+        # Attempt to clean up potentially incomplete file on failure
+        if os.path.exists(output_path):
+            os.remove(output_path)
+        return False
+
 def ingest_repo(repo_url: str) -> tuple[bool, str, str | None]:
     """
     Processes a GitHub repo URL using the gitingest library (if available)
@@ -91,32 +113,16 @@ def ingest_repo(repo_url: str) -> tuple[bool, str, str | None]:
     output_path = os.path.join(OUTPUT_DIR, output_filename)
     if is_processed_repo(output_filename):
         return False, "Repository was processed previously.", output_path
-    
-    print(f"\n--- Starting Git Processing ---")
-    print(f"Target Repository: {repo_url}")
-    print(f"Output File:       {output_path}")
 
     try:
+        print(f"\n--- Starting Git Processing ---")
+        print(f"Target Repository: {repo_url}")
+        print(f"Output File:       {output_path}")
         print("Running processing function...")
 
-        os.makedirs(OUTPUT_DIR, exist_ok=True)
-        print(f"Ensured output directory exists: {OUTPUT_DIR}")
-
-        # Execute the gitingest command
-        result = subprocess.run(['gitingest', repo_url, '-o', output_path], capture_output=True, text=True)
-        # Check if the command was successful
-        if result.returncode == 0:
-            print("Command executed successfully")
-            write_to_file(result, output_path)
-            save_to_json(output_filename)
-            print(f"--- Git Processing Finished ---")
+        if run_gitingest(repo_url, output_path, output_filename):
             return True, "Repository ingested successfully.", output_path
         else:
-            error_msg = f"gitingest command failed (code {result.returncode}): {result.stderr[:500]}..." # Limit error length
-            print(f"ERROR: {error_msg}", file=sys.stderr)
-            # Attempt to clean up potentially incomplete file on failure
-            if os.path.exists(output_path):
-                os.remove(output_path)
             return False, error_msg # Failure status
 
     except OSError as e:
