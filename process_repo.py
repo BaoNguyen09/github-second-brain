@@ -45,18 +45,20 @@ def write_to_file(result: CompletedProcess[str], output_path: str):
 def is_valid_repo(repo_url: str) -> bool:
     return repo_url and "github.com" in repo_url
 
-def is_processed_repo(output_filename: str) -> bool:
+def is_processed_repo(output_filename: str, is_raw_url: bool = False) -> bool:
     # This repo will check if the incoming repo was processed
-    folder_path = "data"
-    if not os.path.exists(folder_path):
-        print(f"Error: Folder '{folder_path}' does not exist.")
+    if not os.path.exists(OUTPUT_DIR):
+        print(f"Error: Folder '{OUTPUT_DIR}' does not exist.")
         return False
     
+    if is_raw_url: # convert to otuput_filename given a valid github url
+        output_filename = process_github_url(output_filename)[0]
     if os.path.exists(json_file_path): # read the file if exists
         with open(json_file_path, 'r') as openfile:
             data = json.load(openfile)
             if output_filename in data:
                 return True
+            
     return False
 
 def process_github_url(repo_url: str) -> Tuple[str, str]:
