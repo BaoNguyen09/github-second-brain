@@ -7,13 +7,13 @@ from typing import Tuple, Optional
 OUTPUT_DIR = "data"
 json_file_path = os.path.join("data", "processed_repos.json")
 
-def process_url(repo_url: str) -> str:
+def process_url(repo_url: str, extension: str = ".txt") -> str:
     """
     Processes a GitHub repo URL into a filename using all the path
     components in the url connected by a hyphen
     """
     path = repo_url[19:] # exclude the part: https://github.com/
-    filename = "-".join(path.split("/")) + ".txt"
+    filename = "-".join(path.split("/")) + extension
     return filename
 
 def write_to_file(result: CompletedProcess[str], output_path: str):
@@ -75,20 +75,25 @@ def process_github_url(repo_url: str) -> Tuple[str, str]:
     output_filename = process_url(repo_url)
     return output_filename, os.path.join(OUTPUT_DIR, output_filename)
 
-def save_to_json(output_filename: str):
+def save_to_json(input_data: str | dict, file_path: str = json_file_path):
     """Store the filename into a json file for faster check
 
     Args:
         output_filename: filename storing processed data
     """
     data = {}
-    if os.path.exists(json_file_path): # read the file if exists
-        with open(json_file_path, 'r') as openfile:
+    if os.path.exists(file_path): # read the file if exists
+        with open(file_path, 'r') as openfile:
             data = json.load(openfile)
 
-    data[output_filename] = None # add another filename into this json file
+    if isinstance(input_data, dict): # when write dict into json file directly
+        with open(file_path, "w") as outfile:
+            json.dump(input_data, outfile, indent=4)
+        return
+
+    data[input_data] = None # add another filename into this json file
     data = json.dumps(data, indent=4)
-    with open(json_file_path, "w") as outfile:
+    with open(file_path, "w") as outfile:
         outfile.write(data)
 
 def run_gitingest(repo_url: str, output_path: str, output_filename: str) -> bool:
@@ -161,6 +166,73 @@ def ingest_repo(repo_url: str) -> Tuple[bool, str, Optional[str]]:
         print(f"ERROR: {error_msg}", file=sys.stderr)
         return False, error_msg # General failure status
     
+def _convert_ingested_to_json(output_path: str) -> Optional[dict]:
+    """
+    Convert the concatenated file content into json format for quicker
+    retrieval of certain files
+    """
+    try:
+        repo_dict = {}
+ 
+        with open(output_path, "r", encoding='utf-8') as file:
+            file_content = ""
+            file_path = ""
+            marker = "================================================"
+            while True:
+                line = file.readline()
+                if not line:
+                    # Store the final file if we have content
+                    if file_path and file_path.strip():
+                        repo_dict[file_path.strip()] = file_content
+                    break
+ 
+                if marker in line: # marker indicating the start of a new file
+                    # store current file content
+                    file_path = "directory_tree" if file_path == "" else file_path.strip()
+                    repo_dict[file_path] = file_content
+ 
+                    # start storing next file
+                    next_line = file.readline()
+                    if next_line.startswith("File: "):
+                        file_path = next_line[6:].strip()  # Remove "File: " prefix
+                    else:
+                        file_path = next_line.strip()
+                    file.readline()
+                    file_content = "" # reset
+                    continue
+                file_content += line
+ 
+        # Write to a json file
+        file_path = output_path.split(".")[0] + ".json"
+        save_to_json(repo_dict, file_path)
+ 
+    except (IOError, OSError) as e:
+        print(f"ERROR: Could not process file {output_path}: {e}", file=sys.stderr)
+        return None
+    except Exception as e:
+        print(f"ERROR: Unexpected error during JSON conversion: {e}", file=sys.stderr)
+        return None
+
+    return repo_dict
+
+def get_a_file_content(file_path: str, repo_file_path: str) -> str:
+    """
+    Given a processed repo, get a certain file from it with the correct path
+    TODO: process repo_file_path before using, maybe use repo_url instead of file_path
+            for flexibility
+    """
+    if not os.path.exists(file_path):
+        return "JSON file not found."
+        
+    try:
+        with open(file_path, 'r') as openfile:
+            data = json.load(openfile)
+        return data.get(repo_file_path, "File not found in repository.")
+    except json.JSONDecodeError as e:
+        return f"Error parsing JSON file: {e}"
+    except (IOError, OSError) as e:
+        return f"Error reading file: {e}"
+
 def get_directory_structure(repo_url: str) -> str:
     """
     Extract the directory tree structure from a processed repository file.
@@ -194,3 +266,5 @@ def get_directory_structure(repo_url: str) -> str:
     # If no line with "=" is found, return what we have
     return dir_tree
 
+# _convert_ingested_to_json("data\BaoNguyen09-github-second-brain.txt")
+# print(get_a_file_content("data\BaoNguyen09-github-second-brain.json", ".github/pull_request_template.md"))
