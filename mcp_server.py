@@ -34,6 +34,32 @@ def get_processed_repo(repo_url: str) -> str:
     
     return data["message"]
 
+@mcp.tool()
+def get_directory_tree(repo_url: str) -> str:
+    """Get directory tree of repository that was processed.
+    TODO: i need a way to handle unprocessed repo, 
+          otherwise it the tool call will time out
+
+    Args:
+        repo_url: a valid GitHub repository link
+
+    Return:
+        str: the full content of directory tree
+    """
+
+    payload = {
+        "repo_url": repo_url
+    }
+    url = "http://127.0.0.1:8000/api/v1/dir-tree"
+    response = requests.get(url, json=payload)
+    data = response.json()
+
+    # wait for response, and get the tree
+    if data["message"] == "Success":
+        return data["directory_tree"]
+    
+    return data["message"]
+
 @mcp.resource("ghsb://digest/{repo_owner}/{repo_name}")
 def get_processed_repo(repo_owner: str, repo_name: str) -> str | dict:
     """Get repository that was processed and stored.
