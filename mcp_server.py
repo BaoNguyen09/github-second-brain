@@ -36,7 +36,7 @@ def get_processed_repo(repo_url: str) -> str:
 
 @mcp.tool()
 def get_directory_tree(repo_url: str) -> str:
-    """Get repository that was processed and stored.
+    """Get directory tree of repository that was processed.
     TODO: i need a way to handle unprocessed repo, 
           otherwise it the tool call will time out
 
