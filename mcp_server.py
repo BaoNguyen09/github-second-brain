@@ -37,8 +37,6 @@ def get_processed_repo(repo_url: str) -> str:
 @mcp.tool()
 def get_directory_tree(repo_url: str) -> str:
     """Get directory tree of repository that was processed.
-    TODO: i need a way to handle unprocessed repo, 
-          otherwise it the tool call will time out
 
     Args:
         repo_url: a valid GitHub repository link
@@ -54,9 +52,35 @@ def get_directory_tree(repo_url: str) -> str:
     response = requests.get(url, json=payload)
     data = response.json()
 
-    # wait for response, and get the tree
+    # wait for response, and get the file content
     if data["message"] == "Success":
         return data["directory_tree"]
+    
+    return data["message"]
+
+@mcp.tool()
+def get_file_content(repo_url: str, file_path: str = "directory_tree") -> str:
+    """Get content of a file from a processed repository.
+
+    Args:
+        repo_url: a valid GitHub repository link
+        file_path: a valid, existing path to a file (no leading or trailing "/")
+                    (By default, it will return the tree directory)
+    Return:
+        str: the full content of that file in plain text
+    """
+
+    payload = {
+        "repo_url": repo_url,
+        "file_path": file_path
+    }
+    url = "http://127.0.0.1:8000/api/v1/get-file"
+    response = requests.get(url, json=payload)
+    data = response.json()
+
+    # wait for response, and get the file content
+    if data["message"] == "Success":
+        return data["content"]
     
     return data["message"]
 

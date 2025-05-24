@@ -1,9 +1,11 @@
 from fastapi import FastAPI, Response, status, BackgroundTasks
 from pydantic import BaseModel, HttpUrl
-from process_repo import ingest_repo, get_directory_structure, is_processed_repo
+from process_repo import ingest_repo, get_directory_structure, is_processed_repo, get_a_file_content
+from typing import Optional
 
 class RepoRequest(BaseModel):
     repo_url: HttpUrl
+    file_path: Optional[str] = None
 
 app = FastAPI()
 
@@ -69,3 +71,29 @@ def get_dir_tree(repo_req: RepoRequest, response: Response, background_tasks: Ba
          print(f"ERROR in API tree fetching for repo '{repo_url_str}': {e}") # Log the error
          response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
          return {"message": f"Failed to fetch directory tree of {repo_url_str} due to an internal error."}
+    
+@app.get("/api/v1/get-file", status_code=200)
+def get_file_content(repo_req: RepoRequest, response: Response, background_tasks: BackgroundTasks):
+    repo_url_str = str(repo_req.repo_url)
+    file_path = repo_req.file_path
+
+    # check if incoming repo was processed
+    try:
+        processing_status = is_processed_repo(repo_url_str, True)
+        if processing_status:
+            return {
+                "message": "Success",
+                "content": get_a_file_content(repo_url_str, file_path)
+            }
+
+        # Else, return a response and process the repo in background
+        background_tasks.add_task(process_repo, repo_req, response)
+        response.status_code = status.HTTP_202_ACCEPTED
+        return {
+            "message": f"Repository {repo_url_str} is being processed now, come back later.",
+        }
+        
+    except Exception as e:
+         print(f"ERROR in API content fetching for repo '{repo_url_str}': {e}") # Log the error
+         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+         return {"message": f"Failed to fetch a file content from {repo_url_str} due to an internal error."}
