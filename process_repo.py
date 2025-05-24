@@ -274,6 +274,3 @@ def get_directory_structure(repo_url: str) -> str:
     
     # If no line with "=" is found, return what we have
     return dir_tree
-
-# _convert_ingested_to_json("data\BaoNguyen09-github-second-brain.txt")
-# print(get_a_file_content("data\BaoNguyen09-github-second-brain.json", ".github/pull_request_template.md"))
