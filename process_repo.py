@@ -76,10 +76,12 @@ def process_github_url(repo_url: str) -> Tuple[str, str]:
     return output_filename, os.path.join(OUTPUT_DIR, output_filename)
 
 def save_to_json(input_data: str | dict, file_path: str = json_file_path):
-    """Store the filename into a json file for faster check
+    """Save data to a JSON file.
 
     Args:
-        output_filename: filename storing processed data
+        input_data: Either a filename string to add as a key with None value,
+                   or a dictionary to write directly to the JSON file
+        file_path: Path to the JSON file
     """
     data = {}
     if os.path.exists(file_path): # read the file if exists
@@ -186,7 +188,7 @@ def _convert_ingested_to_json(output_path: str) -> Optional[dict]:
                         repo_dict[file_path.strip()] = file_content
                     break
  
-                if marker in line: # marker indicating the start of a new file
+                if line.startswith(marker): # marker indicating the start of a new file
                     # store current file content
                     file_path = "directory_tree" if file_path == "" else file_path.strip()
                     repo_dict[file_path] = file_content
@@ -203,7 +205,7 @@ def _convert_ingested_to_json(output_path: str) -> Optional[dict]:
                 file_content += line
  
         # Write to a json file
-        file_path = output_path.split(".")[0] + ".json"
+        file_path = os.path.splitext(output_path)[0] + ".json"
         save_to_json(repo_dict, file_path)
  
     except (IOError, OSError) as e:
