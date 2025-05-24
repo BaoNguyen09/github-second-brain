@@ -217,19 +217,26 @@ def _convert_ingested_to_json(output_path: str) -> Optional[dict]:
 
     return repo_dict
 
-def get_a_file_content(file_path: str, repo_file_path: str) -> str:
+def get_a_file_content(repo_url: str, repo_file_path: str) -> str:
     """
     Given a processed repo, get a certain file from it with the correct path
-    TODO: process repo_file_path before using, maybe use repo_url instead of file_path
-            for flexibility
     """
-    if not os.path.exists(file_path):
-        return "JSON file not found."
-        
+    if not is_valid_repo(repo_url):
+        return f"Invalid or non-GitHub URL provided: {repo_url}"
+    output_filename, output_path = process_github_url(repo_url)
+    output_path = os.path.splitext(output_path)[0] + ".json" # convert from txt->json
+    if not is_processed_repo(output_filename): # queue this repo process if it's new
+        ingest_repo(repo_url)
+        return "Repository is being processed"
+    # remove leading+trailing "/"
+    if repo_file_path.startswith("/"):
+        repo_file_path = repo_file_path[1:]
+    if repo_file_path.endswith("/"):
+        repo_file_path = repo_file_path[:-1]
     try:
-        with open(file_path, 'r') as openfile:
+        with open(output_path, 'r') as openfile:
             data = json.load(openfile)
-        return data.get(repo_file_path, "File not found in repository.")
+        return data.get(repo_file_path, "File not found in this repository.")
     except json.JSONDecodeError as e:
         return f"Error parsing JSON file: {e}"
     except (IOError, OSError) as e:
