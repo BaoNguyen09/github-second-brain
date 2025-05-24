@@ -98,7 +98,7 @@ def save_to_json(input_data: str | dict, file_path: str = json_file_path):
     with open(file_path, "w") as outfile:
         outfile.write(data)
 
-def run_gitingest(repo_url: str, output_path: str, output_filename: str) -> bool:
+def run_gitingest(repo_url: str, output_path: str, output_filename: str) -> Tuple[bool, str]:
     """
     Run the gitingest process seperately
 
@@ -109,6 +109,7 @@ def run_gitingest(repo_url: str, output_path: str, output_filename: str) -> bool
     
     Return:
         a bool: status of this process
+        a string: detailed error message
 
     """
     os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -122,14 +123,14 @@ def run_gitingest(repo_url: str, output_path: str, output_filename: str) -> bool
         write_to_file(result, output_path)
         save_to_json(output_filename)
         print(f"--- Git Processing Finished ---")
-        return True
+        return True, None
     else:
         error_msg = f"gitingest command failed (code {result.returncode}): {result.stderr[:500]}..." # Limit error length
         print(f"ERROR: {error_msg}", file=sys.stderr)
         # Attempt to clean up potentially incomplete file on failure
         if os.path.exists(output_path):
             os.remove(output_path)
-        return False
+        return False, error_msg
 
 def ingest_repo(repo_url: str) -> Tuple[bool, str, Optional[str]]:
     """
@@ -153,7 +154,11 @@ def ingest_repo(repo_url: str) -> Tuple[bool, str, Optional[str]]:
         print(f"Output File:       {output_path}")
         print("Running processing function...")
 
-        if run_gitingest(repo_url, output_path, output_filename):
+        status = run_gitingest(repo_url, output_path, output_filename)
+        error_msg = status[1]
+        if status[0]:
+            if not _convert_ingested_to_json(output_path):
+                return False, "Repository can't be converted to json", None
             return True, "Repository ingested successfully.", output_path
         else:
             return False, error_msg # Failure status
@@ -168,7 +173,7 @@ def ingest_repo(repo_url: str) -> Tuple[bool, str, Optional[str]]:
         print(f"ERROR: {error_msg}", file=sys.stderr)
         return False, error_msg # General failure status
     
-def _convert_ingested_to_json(output_path: str) -> Optional[dict]:
+def _convert_ingested_to_json(output_path: str) -> Optional[bool]:
     """
     Convert the concatenated file content into json format for quicker
     retrieval of certain files
@@ -210,12 +215,12 @@ def _convert_ingested_to_json(output_path: str) -> Optional[dict]:
  
     except (IOError, OSError) as e:
         print(f"ERROR: Could not process file {output_path}: {e}", file=sys.stderr)
-        return None
+        return False
     except Exception as e:
         print(f"ERROR: Unexpected error during JSON conversion: {e}", file=sys.stderr)
-        return None
+        return False
 
-    return repo_dict
+    return True
 
 def get_a_file_content(repo_url: str, repo_file_path: str) -> str:
     """
