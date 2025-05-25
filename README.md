@@ -1,7 +1,7 @@
 <!-- PROJECT LOGO -->
 <div align="center">
   <a href="https://github.com/BaoNguyen09/github-second-brain">
-    <img src="assets/images/logo.png" alt="Logo" width="80" height="80">
+    <img src="assets/images/ghsb_logo_v1.png" alt="Logo" width="80" height="80">
   </a>
 
 <h3 align="center">GitHub Second Brain</h3>
