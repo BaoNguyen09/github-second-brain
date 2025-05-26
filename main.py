@@ -1,14 +1,41 @@
-from fastapi import FastAPI, Response, status, BackgroundTasks
+from fastapi import Depends, FastAPI, HTTPException, Path, Response, status, BackgroundTasks
 from pydantic import BaseModel, HttpUrl
+from github_api_client import fetch_issue_context, GitHubApiError
 from process_repo import ingest_repo, get_directory_structure, is_processed_repo, get_a_file_content
-from typing import Optional
+from typing import List, Optional
+import httpx
 
 class RepoRequest(BaseModel):
     repo_url: HttpUrl
     file_path: Optional[str] = None
 
+class GitHubIssueCreator(BaseModel):
+    login: str
+    html_url: Optional[HttpUrl] = None # html_url can sometimes be missing for system users
+
+class IssueCommentDetail(BaseModel):
+    user: GitHubIssueCreator
+    created_at: Optional[str] = None # Or datetime
+    body: str
+    html_url: Optional[HttpUrl] = None
+
+class GitHubIssueContextResponse(BaseModel):
+    number: int
+    title: str
+    body: Optional[str] = None
+    state: str
+    html_url: HttpUrl
+    user: GitHubIssueCreator
+    created_at: str # Or datetime
+    comments_count: int
+    comments: List[IssueCommentDetail]
+
 app = FastAPI()
 
+# --- Dependency for HTTP client ---
+async def get_http_client():
+    async with httpx.AsyncClient() as client:
+        yield client
 
 @app.get("/")
 async def root():
@@ -97,3 +124,41 @@ def get_file_content(repo_req: RepoRequest, response: Response, background_tasks
          print(f"ERROR in API content fetching for repo '{repo_url_str}': {e}") # Log the error
          response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
          return {"message": f"Failed to fetch a file content from {repo_url_str} due to an internal error."}
+    
+@app.get("/api/v1/github/issue-context/{owner}/{repo}/{issue_number}",
+           response_model=GitHubIssueContextResponse,
+           summary="Get context for a specific GitHub issue including title, body, and comments.",)
+
+async def get_github_issue_context_api(
+    owner: str = Path(..., description="The owner of the GitHub repository."),
+    repo: str = Path(..., description="The name of the GitHub repository."),
+    issue_number: int = Path(..., description="The issue id number."),
+    client: httpx.AsyncClient = Depends(get_http_client)
+):
+    """
+    Fetches the title, body, state, and all comments for a given GitHub issue
+    by calling the github_api_client.
+    """
+    try:
+        raw_context_data = await fetch_issue_context(
+            owner=owner,
+            repo=repo,
+            issue_number=issue_number,
+            http_client=client,
+        )
+
+        # Basic check to ensure essential data is there before Pydantic validation
+        if not all(k in raw_context_data for k in ["number", "title", "state", "html_url", "user", "created_at", "comments"]):
+            raise HTTPException(status_code=500, detail="Internal data processing failed: missing essential fields from GitHub client.")
+
+        return GitHubIssueContextResponse(**raw_context_data)
+
+    except GitHubApiError as e:
+        # Handle custom errors from your API client
+        raise HTTPException(status_code=e.status_code or 500, detail=str(e))
+    except HTTPException: # Re-raise FastAPI's own HTTPExceptions
+        raise
+    except Exception as e:
+        # Catch-all for other unexpected errors during the API endpoint handling
+        print(f"Unexpected error in API endpoint /api/v1/github/issue-context: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"An unexpected internal server error occurred: {str(e)}")
