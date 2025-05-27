@@ -1,7 +1,7 @@
 from fastapi import Depends, FastAPI, HTTPException, Path, Response, status, BackgroundTasks
 from pydantic import BaseModel, HttpUrl
-from github_api_client import fetch_issue_context, GitHubApiError
-from process_repo import ingest_repo, get_directory_structure, is_processed_repo, get_a_file_content
+from app.internal_tools.github_api_client import fetch_issue_context, GitHubApiError
+from app.internal_tools.process_repo import ingest_repo, get_directory_structure, is_processed_repo, get_a_file_content
 from typing import List, Optional
 import httpx
 
