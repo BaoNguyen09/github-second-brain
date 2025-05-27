@@ -1,3 +1,5 @@
+import re
+from typing import Any, Dict
 from mcp.server.fastmcp import FastMCP, Context
 import requests
 
@@ -83,6 +85,73 @@ def get_file_content(repo_url: str, file_path: str = "directory_tree") -> str:
         return data["content"]
     
     return data["message"]
+
+@mcp.tool()
+def get_issue_context(repo_url: str, issue_number: str) -> Dict[str, Any]:
+    """Get issue context from any public github repository.
+
+    Args:
+        repo_url: a valid GitHub repository link
+        issue_number: a string number of the wanted issue
+
+    Return:
+        Dict: A dictionary containing the structured issue context.
+    """
+    owner = ""
+    repo_name = ""
+
+    # 1. Parse owner and repo from repo_url
+    match = re.match(r"^https?://github\.com/([^/]+)/([^/]+)/?$", repo_url)
+    if match:
+        owner = match.group(1)
+        repo_name = match.group(2)
+    else:
+        return {
+            "error": True,
+            "message": "Invalid GitHub repository URL format. Expected: https://github.com/owner/repo",
+            "input_repo_url": repo_url 
+        }
+
+    # 2. Validate and convert issue_number
+    try:
+        issue_num_int = int(issue_number)
+        if issue_num_int <= 0:
+            raise ValueError("Issue number must be a positive integer.")
+    except ValueError:
+        return {
+            "error": True,
+            "message": "Invalid issue number. It must be a string representing a positive integer.",
+            "input_issue_number": issue_number
+        }
+
+    # 3. Construct the URL for the FastAPI endpoint
+    api_endpoint_url = f"http://127.0.0.1:8000/api/v1/github/issue-context/{owner}/{repo_name}/{issue_num_int}"
+
+    # 4. Call the FastAPI endpoint
+    try:
+        response = requests.get(api_endpoint_url, timeout=30) # 30-second timeout
+        response.raise_for_status()  # Raises an HTTPError for bad responses (4xx or 5xx)
+        return response.json()
+
+    except Exception as e:
+        # Log the detailed error on the server side for debugging
+        error_log_message = (
+            f"MCP tool 'get_issue_context' failed for {owner}/{repo_name}#{issue_num_int}. "
+            f"Error calling internal API ({api_endpoint_url}): {type(e).__name__} - {str(e)}."
+        )
+        if isinstance(e, requests.exceptions.HTTPError) and e.response is not None:
+            error_log_message += f" Response from API: {e.response.text}"
+        print(error_log_message) # Server-side log
+
+        # Generic error message for the AI
+        return {
+            "error": True,
+            "message": (
+                f"Could not retrieve context for issue '{issue_num_int}' in repository '{owner}/{repo_name}'. "
+                "Please ensure the repository URL and issue number are correct. "
+                "If the problem persists, the backend service might be experiencing issues."
+            )
+        }
 
 @mcp.resource("ghsb://digest/{repo_owner}/{repo_name}")
 def get_processed_repo(repo_owner: str, repo_name: str) -> str | dict:

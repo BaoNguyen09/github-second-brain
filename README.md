@@ -19,7 +19,10 @@
     <a href="https://github.com/BaoNguyen09/github-second-brain/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
   </p>
 </div>
-
+<!--
+## Project Launch
+<video align="center" src="put the link to video here later" width="80%"></video>
+-->
 ## ✨ Features
 * 😎 **Latest Documentation on ANY GitHub Project**: Grant your AI assistant seamless access to the GitHub project's documentation and code. The built-in retrieval tools help the AI gets tree directory and specific file content without exceeding Context Window Limit!
 * 🧠 **No More Hallucinations**: With Github Second Brain, your AI assistant can provide accurate and relevant answers to your questions.
