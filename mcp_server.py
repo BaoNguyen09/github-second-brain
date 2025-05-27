@@ -5,6 +5,7 @@ import requests
 
 # Initialize FastMCP server
 mcp = FastMCP("Github-Second-Brain")
+root_url = "http://127.0.0.2"
 
 @mcp.tool()
 def get_processed_repo(repo_url: str) -> str:
@@ -22,7 +23,7 @@ def get_processed_repo(repo_url: str) -> str:
     payload = {
         "repo_url": repo_url
     }
-    url = "http://127.0.0.1:8000/api/v1/process"
+    url = f"{root_url}/api/v1/process"
     response = requests.post(url, json=payload)
     data = response.json()
     # wait for response, and get the filename
@@ -50,7 +51,7 @@ def get_directory_tree(repo_url: str) -> str:
     payload = {
         "repo_url": repo_url
     }
-    url = "http://127.0.0.1:8000/api/v1/dir-tree"
+    url = f"{root_url}/api/v1/dir-tree"
     response = requests.get(url, json=payload)
     data = response.json()
 
@@ -76,7 +77,7 @@ def get_file_content(repo_url: str, file_path: str = "directory_tree") -> str:
         "repo_url": repo_url,
         "file_path": file_path
     }
-    url = "http://127.0.0.1:8000/api/v1/get-file"
+    url = f"{root_url}/api/v1/get-file"
     response = requests.get(url, json=payload)
     data = response.json()
 
@@ -125,7 +126,7 @@ def get_issue_context(repo_url: str, issue_number: str) -> Dict[str, Any]:
         }
 
     # 3. Construct the URL for the FastAPI endpoint
-    api_endpoint_url = f"http://127.0.0.1:8000/api/v1/github/issue-context/{owner}/{repo_name}/{issue_num_int}"
+    api_endpoint_url = f"{root_url}/api/v1/github/issue-context/{owner}/{repo_name}/{issue_num_int}"
 
     # 4. Call the FastAPI endpoint
     try:
@@ -168,7 +169,7 @@ def get_processed_repo(repo_owner: str, repo_name: str) -> str | dict:
     payload = {
         "repo_url": repo_url
     }
-    url = "http://127.0.0.1:8000/api/v1/process"
+    url = "/api/v1/process"
     response = requests.post(url, json=payload)
     data = response.json()
     # wait for response, and get the filename
