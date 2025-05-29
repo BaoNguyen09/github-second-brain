@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 import re
 from typing import Any, Dict
 from mcp.server.fastmcp import FastMCP, Context
@@ -5,7 +7,8 @@ import requests
 
 # Initialize FastMCP server
 mcp = FastMCP("Github-Second-Brain")
-root_url = "http://127.0.0.2"
+load_dotenv()
+root_url = os.getenv("GHSB_BACKEND_URL", "http://127.0.0.1:8080")
 
 @mcp.tool()
 def get_processed_repo(repo_url: str) -> str:
@@ -24,7 +27,7 @@ def get_processed_repo(repo_url: str) -> str:
         "repo_url": repo_url
     }
     url = f"{root_url}/api/v1/process"
-    response = requests.post(url, json=payload)
+    response = requests.post(url, json=payload, timeout=30)
     data = response.json()
     # wait for response, and get the filename
     if "output_path" in data:
@@ -52,7 +55,7 @@ def get_directory_tree(repo_url: str) -> str:
         "repo_url": repo_url
     }
     url = f"{root_url}/api/v1/dir-tree"
-    response = requests.get(url, json=payload)
+    response = requests.get(url, json=payload, timeout=30)
     data = response.json()
 
     # wait for response, and get the file content
@@ -78,7 +81,7 @@ def get_file_content(repo_url: str, file_path: str = "directory_tree") -> str:
         "file_path": file_path
     }
     url = f"{root_url}/api/v1/get-file"
-    response = requests.get(url, json=payload)
+    response = requests.get(url, json=payload, timeout=30)
     data = response.json()
 
     # wait for response, and get the file content
@@ -169,7 +172,7 @@ def get_processed_repo(repo_owner: str, repo_name: str) -> str | dict:
     payload = {
         "repo_url": repo_url
     }
-    url = "/api/v1/process"
+    url = f"{root_url}/api/v1/process"
     response = requests.post(url, json=payload)
     data = response.json()
     # wait for response, and get the filename
