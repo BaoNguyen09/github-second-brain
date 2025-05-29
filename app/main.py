@@ -103,9 +103,11 @@ def get_dir_tree(repo_req: RepoRequest, response: Response, background_tasks: Ba
 def get_file_content(repo_req: RepoRequest, response: Response, background_tasks: BackgroundTasks):
     repo_url_str = str(repo_req.repo_url)
     file_path = repo_req.file_path
-
+    
     # check if incoming repo was processed
     try:
+        if not file_path:
+            raise HTTPException(status_code=400, detail="file_path is required")
         processing_status = is_processed_repo(repo_url_str, True)
         if processing_status:
             return {
