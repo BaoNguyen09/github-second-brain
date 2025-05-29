@@ -21,7 +21,7 @@ async def _fetch_all_paginated_comments(
     page_num = 1
     MAX_PAGES_TO_FETCH = 50
 
-    while page_num < MAX_PAGES_TO_FETCH:
+    while page_num <= MAX_PAGES_TO_FETCH:
         request_url = f"{base_comments_url}?per_page=100&page={page_num}"
         
         print(f"Fetching comments page {page_num} from {request_url}") 
@@ -96,6 +96,7 @@ async def fetch_issue_context(
     issue_url = f"https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}"
     issue_data_raw: Dict[str, Any] = {}
     comments_data_raw: List[Dict[str, Any]] = []
+    structured_comments: List[Dict[str, Any]] = []
 
     try:
         # 1. Fetch the main issue details
@@ -118,7 +119,6 @@ async def fetch_issue_context(
 
             if comments_data_raw:
                 # Prepare comments list
-                structured_comments = []
                 for comment_raw in comments_data_raw:
                     comment_user_data = comment_raw.get("user", {})
                     comment_user_login = comment_user_data.get("login")
