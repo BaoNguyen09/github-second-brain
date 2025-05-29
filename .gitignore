@@ -1,2 +1,6 @@
 __pycache__
-/data/*
+processed-repo-data
+
+# Environment files
+.env
+*.env
