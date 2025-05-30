@@ -1,14 +1,12 @@
 import os
-from dotenv import load_dotenv
 import re
 from typing import Any, Dict
-from mcp.server.fastmcp import FastMCP, Context
+from mcp.server.fastmcp import FastMCP
 import requests
 
 # Initialize FastMCP server
 mcp = FastMCP("Github-Second-Brain")
-load_dotenv()
-root_url = os.getenv("GHSB_BACKEND_URL", "http://127.0.0.1:8080")
+root_url = os.getenv("GHSB_API_ENDPOINT", "http://127.0.0.2:8080")
 
 @mcp.tool()
 def get_processed_repo(repo_url: str) -> str:
