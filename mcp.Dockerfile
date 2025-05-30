@@ -1,0 +1,13 @@
+FROM python:3.11
+
+WORKDIR /code
+
+COPY ./mcp/requirements.txt /code/requirements.txt
+
+RUN pip install uv
+
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+
+COPY ./mcp/ /code/mcp
+
+CMD ["uv", "--directory", "/code/mcp", "run", "mcp_server.py"]
