@@ -7,7 +7,7 @@ import requests
 # Initialize FastMCP server
 mcp = FastMCP("Github-Second-Brain")
 root_url = os.getenv("GHSB_API_ENDPOINT", "http://127.0.0.2:8080")
-
+print(f"api endpoing: {root_url}")
 @mcp.tool()
 def get_processed_repo(repo_url: str) -> str:
     """Get repository that was processed and stored.
