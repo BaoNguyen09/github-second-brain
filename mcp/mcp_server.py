@@ -193,13 +193,9 @@ if __name__ == "__main__":
     print(f"MCP Server configured to use FastAPI at: {fastapi_url}", file=sys.stderr)
 
     try:
-        print("Attempting to start mcp.run(transport='sse')...", file=sys.stderr)
+        print("Attempting to start mcp.run(transport='stdio')...", file=sys.stderr)
         mcp.run(
-            transport='sse',
-            host="0.0.0.0",
-            port=3000,
-            path="/mcp",
-            log_level="debug",
+            transport='stdio',
         )
         print("mcp.run() finished.", file=sys.stderr) # Should not be reached if it's a long-running server
     except ImportError as e:
