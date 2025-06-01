@@ -1,13 +1,12 @@
-import os
+import os, sys, traceback
 import re
 from typing import Any, Dict
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 import requests
 
 # Initialize FastMCP server
 mcp = FastMCP("Github-Second-Brain")
 root_url = os.getenv("GHSB_API_ENDPOINT", "http://127.0.0.2:8080")
-print(f"api endpoing: {root_url}")
 @mcp.tool()
 def get_processed_repo(repo_url: str) -> str:
     """Get repository that was processed and stored.
@@ -184,5 +183,32 @@ def get_processed_repo(repo_owner: str, repo_name: str) -> str | dict:
     return {"message": data["message"]}
 
 if __name__ == "__main__":
-    # Initialize and run the server
-    mcp.run(transport='stdio')
+    print("MCP Server script starting...", file=sys.stderr)
+
+    # Check for the crucial environment variable
+    fastapi_url = os.environ.get("GHSB_API_ENDPOINT")
+    if not fastapi_url:
+        print("ERROR: FASTAPI_SERVICE_URL environment variable not set!", file=sys.stderr)
+        sys.exit(1) # Exit if critical config is missing
+    print(f"MCP Server configured to use FastAPI at: {fastapi_url}", file=sys.stderr)
+
+    try:
+        print("Attempting to start mcp.run(transport='sse')...", file=sys.stderr)
+        mcp.run(
+            transport='sse',
+            host="0.0.0.0",
+            port=3000,
+            path="/mcp",
+            log_level="debug",
+        )
+        print("mcp.run() finished.", file=sys.stderr) # Should not be reached if it's a long-running server
+    except ImportError as e:
+        print(f"MCP Server exiting due to ImportError: {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"MCP Server exiting due to an unhandled exception: {type(e).__name__} - {e}", file=sys.stderr)
+        # Print traceback for more details
+        traceback.print_exc(file=sys.stderr)
+        sys.exit(1)
+    finally:
+        print("MCP Server script attempting to exit.", file=sys.stderr)
