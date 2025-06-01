@@ -1,13 +1,13 @@
-FROM python:3.11
+FROM python:3.12-alpine3.17
 
 WORKDIR /code
 
-COPY /requirements.txt /code/requirements.txt
+COPY . /code
 
 RUN pip install uv
 
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-COPY . /code/mcp
+ENV GHSB_API_ENDPOINT="https://ghsb-fastapi-tiolb.ondigitalocean.app/"
 
-CMD ["uv", "--directory", "/code/mcp", "run", "mcp_server.py"]
+CMD ["uv", "--directory", "/code", "run", "mcp_server.py"]
