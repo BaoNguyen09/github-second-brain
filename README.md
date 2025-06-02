@@ -12,7 +12,7 @@
     <a href="https://github.com/BaoNguyen09/github-second-brain"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://drive.google.com/file/d/1PhLqO4N2nWrZi89p7QG4enUO7agBe8tK/view?usp=sharing">View Demo</a>
+    <a href="https://github.com/user-attachments/assets/9999fb6a-d710-4924-88f9-dae5d239322e">View Demo</a>
     &middot;
     <a href="https://github.com/BaoNguyen09/github-second-brain/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     &middot;
@@ -28,7 +28,7 @@ Even senior developers struggle with large, unfamiliar, interconnected codebases
 This project develops tools for targeted, on-demand data extraction from diverse raw code repositories. It aims to provide AI clients (LLMs) with concise, query-relevant context/data to enhance understanding of unfamiliar or multiple codebases. This effectively manages token limits problem while complementing other existing AI tools.
 
 ## Project Launch
-<video align="center" src="https://github.com/user-attachments/assets/7f64aeca-364b-47d8-829f-f22a24ce709a" width="80%"></video>
+<video align="center" src="https://github.com/user-attachments/assets/9999fb6a-d710-4924-88f9-dae5d239322e" width="80%"></video>
 
 ## ✨ Features
 
