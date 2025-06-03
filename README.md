@@ -90,7 +90,7 @@ Update your Cursor configuration file at `~/.cursor/mcp.json`:
 ## ⚙ How It Works
 Github Second Brain connects your AI assistant to GitHub repositories using the Model Context Protocol (MCP), a standard that lets AI tools request additional information from external sources.
 What happens when you use Github Second Brain:
-1. **You provide a [docker image](ghcr.io/baonguyen09/github-second-brain-mcp)** to your AI assistant that is used to build a local MCP server, exposing tools for fetching issue context, file content, directory tree, etc.
+1. **You provide a [docker image](https://ghcr.io/baonguyen09/github-second-brain-mcp)** to your AI assistant that is used to build a local MCP server, exposing tools for fetching issue context, file content, directory tree, etc.
 2. **Prompt the AI assistant** on documentation/code-related questions.
 3. **Your AI sends requests** to the locally built MCP server to use its tools (with your approval).
 4. **Local server executes the AI's request** and returns the requested data.
