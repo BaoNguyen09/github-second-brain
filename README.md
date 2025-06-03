@@ -20,15 +20,15 @@
   </p>
 </div>
 
+## Project Launch
+<video align="center" src="https://github.com/user-attachments/assets/9999fb6a-d710-4924-88f9-dae5d239322e" width="80%"></video>
+
 ## Why?
 ### The Problem
 Even senior developers struggle with large, unfamiliar, interconnected codebases and their dependencies. For AI, this is even a bigger problem because without enough context, AI can't help, and will hallucinate but with too much, it will exceed its capability (context window limits).
 
 ### Solution
 This project develops tools for targeted, on-demand data extraction from diverse raw code repositories. It aims to provide AI clients (LLMs) with concise, query-relevant context/data to enhance understanding of unfamiliar or multiple codebases. This effectively manages token limits problem while complementing other existing AI tools.
-
-## Project Launch
-<video align="center" src="https://github.com/user-attachments/assets/9999fb6a-d710-4924-88f9-dae5d239322e" width="80%"></video>
 
 ## ✨ Features
 
