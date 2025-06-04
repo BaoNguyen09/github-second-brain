@@ -62,6 +62,25 @@ def get_directory_tree(repo_url: str) -> str:
     return data["message"]
 
 @mcp.tool()
+async def get_directory_tree_with_depth(
+    owner: str,
+    repo: str,
+    ref: str = None,
+    depth: int = 1
+) -> str:
+    # Add a check for owner + repo fields, they're required
+    url = f"{root_url}/api/v1/get-tree/{owner}/{repo}?ref={ref}&depth={depth}"
+    response = requests.get(url, timeout=30)
+    data = response.json()
+
+    # wait for response, and get the file content
+    if data["message"] == "Success":
+        return data["directory tree"]
+    
+    return data["message"]
+
+
+@mcp.tool()
 def get_file_content(repo_url: str, file_path: str = "directory_tree") -> str:
     """Get content of a file from a processed repository.
 
