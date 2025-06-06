@@ -124,10 +124,10 @@ def get_file_content(repo_req: RepoRequest, response: Response, background_tasks
          response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
          return {"message": f"Failed to fetch a file content from {repo_url_str} due to an internal error."}
     
-@app.get("/api/v1/github/issue-context/{owner}/{repo}/{issue_number}",
+@app.get("/api/v1/issue-context/{owner}/{repo}/{issue_number}",
            response_model=GitHubIssueContextResponse,
-           summary="Get context for a specific GitHub issue including title, body, and comments.",)
-
+           summary="Get context for a specific GitHub issue including title, body, and comments.",
+)
 async def get_github_issue_context_api(
     owner: str = Path(..., description="The owner of the GitHub repository."),
     repo: str = Path(..., description="The name of the GitHub repository."),
@@ -159,5 +159,5 @@ async def get_github_issue_context_api(
         raise
     except Exception as e:
         # Catch-all for other unexpected errors during the API endpoint handling
-        print(f"Unexpected error in API endpoint /api/v1/github/issue-context: {str(e)}")
+        print(f"Unexpected error in API endpoint /api/v1/issue-context: {str(e)}")
         raise HTTPException(status_code=500, detail=f"An unexpected internal server error occurred: {str(e)}")
