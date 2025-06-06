@@ -112,7 +112,7 @@ async def get_contents(
         ref = None
     contents = await fetch_file_contents(owner, repo, path, client, ref, GITHUB_TOKEN)
     if contents is not None:
-        return {"message": "Success", "contents": contents}
+        return {"message": "Success", "contents": contents[0]}
     
     response.status_code = status.HTTP_404_NOT_FOUND
     return {"message": contents[1]}
