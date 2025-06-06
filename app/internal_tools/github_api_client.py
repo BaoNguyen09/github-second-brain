@@ -180,12 +180,12 @@ def _build_hierarchical_tree(flat_tree_list: List[Dict[str, Any]]) -> Dict[str, 
             
             if is_last_part:
                 # It's a file or an explicitly listed empty directory from the flat list
-                current_level[part] = {"_type": item.get("type", "blob")} # 'blob' or 'tree'
+                current_level[part] = {"_type": item.get("type", "blob")} # 'blob/file' or 'tree/dir'
             else:
                 # It's a directory segment in the path
                 if part not in current_level:
                     current_level[part] = {"_type": "tree", "children": {}}
-                elif "_type" not in current_level[part] or current_level[part]["_type"] != "tree":
+                elif "_type" not in current_level[part] or current_level[part]["_type"] not in ("tree", "dir"):
                     # This case handles if a file and directory have the same prefix,
                     # though unlikely with standard git structures. Prioritize tree structure.
                     current_level[part] = {"_type": "tree", "children": {}}
@@ -296,6 +296,7 @@ async def fetch_directory_tree_with_depth(
     ref: Optional[str] = None,
     github_token: Optional[str] = None,
     depth: Optional[int] = 1,
+    full_depth: Optional[bool] = False,
 ) -> str:
     """
     Fetch the tree from github and format it to be LLM-friendly
@@ -307,6 +308,7 @@ async def fetch_directory_tree_with_depth(
         ref: Branch name, tag, or commit SHA of specified tree
         github_token: Optional GitHub API token for authentication
         depth: The specified depth of the tree in int
+        full_depth: Boolean for fetching tree with full depth
 
     Returns:
         A string representing the formatted directory tree.
@@ -360,8 +362,8 @@ async def fetch_directory_tree_with_depth(
 
         if tree_data.get("truncated"):
             print(f"Warning: Tree data for {owner}/{repo}@{ref} was truncated by GitHub API. The returned list might be incomplete.", file=sys.stderr)
-        
-        return format_github_tree_structure(tree_data["tree"], f"{owner}/{repo}", max_depth=depth)
+
+        return format_github_tree_structure(tree_data["tree"], f"{owner}/{repo}", max_depth=None if full_depth else depth)
 
     except httpx.HTTPStatusError as e:
         raise GitHubApiError(
@@ -373,3 +375,65 @@ async def fetch_directory_tree_with_depth(
         raise GitHubApiError(message=f"HTTP request failed while fetching tree for {owner}/{repo}@{ref}: {str(e)}") from e
     except Exception as e: # Catch-all for other unexpected errors like JSON decoding
         raise GitHubApiError(message=f"An unexpected error occurred while fetching tree for {owner}/{repo}@{ref}: {str(e)}") from e
+    
+async def fetch_file_contents(
+    owner: str,
+    repo: str,
+    path: str,
+    http_client: httpx.AsyncClient,
+    ref: Optional[str] = None,
+    github_token: Optional[str] = None,
+) -> Optional[str]:
+    """
+    Fetch the contents from github file/directory
+
+    Args:
+        owner: Repository owner (username/organization)
+        repo: Repository name
+        path: Path to file/directory
+        http_client: An instance of httpx.AsyncClient for making requests
+        ref: The name of the commit/branch/tag. Default: the repository’s default branch
+        github_token: Optional GitHub API token for authentication
+
+    Returns:
+        A content of the file/directory as string
+
+    Raises:
+        GitHubApiError: If there's an issue communicating with the GitHub API
+                        or if the response is unexpected.
+    """
+    headers = {
+        "Accept": "application/vnd.github.raw+json", # Use raw media type for direct content
+        "X-GitHub-Api-Version": "2022-11-28"
+    }
+
+    if github_token:
+        headers["Authorization"] = f"Bearer {github_token}"
+    
+    url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
+    params = {}
+    if ref:
+        params["ref"] = ref
+
+    try:
+        response = await http_client.get(url, headers=headers, params=params, follow_redirects=True) # Allow redirects for raw content
+
+        if response.status_code == 404:
+            print(f"File/Directory not found: {path} in {owner}/{repo}@{ref or 'default branch'}", file=sys.stderr)
+            return None 
+        response.raise_for_status()
+        returned_content_type = response.headers["Content-Type"]
+
+        if returned_content_type == "application/json; charset=utf-8": # this is a dir, so format it and return
+            data = response.json()
+            return format_github_tree_structure(data, f"{owner}/{repo}", None)
+        # else it's a raw text of file content
+        return response.text
+
+    except httpx.HTTPStatusError as e:
+        print(f"GitHub API error fetching file/directory {path}@{ref or 'default'}: {e.response.status_code} - {e.response.text}", file=sys.stderr)
+        raise GitHubApiError(f"GitHub API error: {e.response.status_code}", status_code=e.response.status_code, details=e.response.text) from e
+    except Exception as e:
+        print(f"Error fetching or decoding file/directory {path}@{ref or 'default'}: {e}", file=sys.stderr)
+        raise GitHubApiError(f"Failed to process contents: {str(e)}") from e
+    
