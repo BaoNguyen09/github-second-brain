@@ -81,12 +81,13 @@ async def get_tree(
     repo: str = Path(..., description="The name of the GitHub repository."),
     ref: str = None,
     depth: int = 1,
+    full_depth: bool = False,
     client: httpx.AsyncClient = Depends(get_http_client),
 ):
     try:
         if ref == "":
             ref = None
-        tree = await fetch_directory_tree_with_depth(owner, repo, client, ref, GITHUB_TOKEN, depth)
+        tree = await fetch_directory_tree_with_depth(owner, repo, client, ref, GITHUB_TOKEN, depth, full_depth)
         if "Directory structure:" in tree:
             return {"message": "Success", "directory tree": tree}
         

@@ -14,7 +14,8 @@ def get_directory_tree(
     owner: str,
     repo: str,
     ref: str = "",
-    depth: int = 1
+    depth: int = 1,
+    full_depth: bool = False,
 ) -> str:
     """
     Get directory tree of repository with specified depth
@@ -24,6 +25,7 @@ def get_directory_tree(
         repo: The name of the GitHub repository
         ref: Branch name, tag, or commit SHA of specified tree
         depth: The specified depth of the tree in int
+        full_depth: The bool determine whether to get tree w/ full_depth
 
     Return:
         str: the directory tree with specified depth as a string
@@ -32,7 +34,7 @@ def get_directory_tree(
     if not repo or not owner:
         return "repo and owner fields are required"
     
-    url = f"{root_url}/api/v1/directory-tree/{owner}/{repo}?ref={ref}&depth={depth}"
+    url = f"{root_url}/api/v1/directory-tree/{owner}/{repo}?ref={ref}&depth={depth}&full_depth={full_depth}"
     response = requests.get(url, timeout=30)
     data = response.json()
 
