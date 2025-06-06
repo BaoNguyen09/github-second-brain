@@ -1,6 +1,6 @@
 import sys
 import httpx
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Tuple
 
 class GitHubApiError(Exception):
     """Custom exception for GitHub API errors."""
@@ -383,7 +383,7 @@ async def fetch_file_contents(
     http_client: httpx.AsyncClient,
     ref: Optional[str] = None,
     github_token: Optional[str] = None,
-) -> Optional[str]:
+) -> Tuple[Optional[str], bool]:
     """
     Fetch the contents from github file/directory
 
@@ -419,16 +419,17 @@ async def fetch_file_contents(
         response = await http_client.get(url, headers=headers, params=params, follow_redirects=True) # Allow redirects for raw content
 
         if response.status_code == 404:
-            print(f"File/Directory not found: {path} in {owner}/{repo}@{ref or 'default branch'}", file=sys.stderr)
-            return None 
+            error_msg = f"File/Directory not found: {path} in {owner}/{repo}@{ref or 'default branch'}"
+            print(error_msg, file=sys.stderr)
+            return error_msg, False
         response.raise_for_status()
-        returned_content_type = response.headers["Content-Type"]
 
+        returned_content_type = response.headers["Content-Type"]
         if returned_content_type == "application/json; charset=utf-8": # this is a dir, so format it and return
             data = response.json()
-            return format_github_tree_structure(data, f"{owner}/{repo}", None)
+            return format_github_tree_structure(data, f"{owner}/{repo}", None), True
         # else it's a raw text of file content
-        return response.text
+        return response.text, True
 
     except httpx.HTTPStatusError as e:
         print(f"GitHub API error fetching file/directory {path}@{ref or 'default'}: {e.response.status_code} - {e.response.text}", file=sys.stderr)
