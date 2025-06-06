@@ -10,11 +10,12 @@ root_url = os.getenv("GHSB_API_ENDPOINT", "http://127.0.0.1:8080")
 github_token = os.getenv("GITHUB_PERSONAL_ACCESS_TOKEN", "")
 
 @mcp.tool()
-async def get_directory_tree(
+def get_directory_tree(
     owner: str,
     repo: str,
     ref: str = "",
-    depth: int = 1
+    depth: int = 1,
+    full_depth: bool = False,
 ) -> str:
     """
     Get directory tree of repository with specified depth
@@ -24,6 +25,7 @@ async def get_directory_tree(
         repo: The name of the GitHub repository
         ref: Branch name, tag, or commit SHA of specified tree
         depth: The specified depth of the tree in int
+        full_depth: The bool determine whether to get tree w/ full_depth
 
     Return:
         str: the directory tree with specified depth as a string
@@ -32,7 +34,7 @@ async def get_directory_tree(
     if not repo or not owner:
         return "repo and owner fields are required"
     
-    url = f"{root_url}/api/v1/directory-tree/{owner}/{repo}?ref={ref}&depth={depth}"
+    url = f"{root_url}/api/v1/directory-tree/{owner}/{repo}?ref={ref}&depth={depth}&full_depth={full_depth}"
     response = requests.get(url, timeout=30)
     data = response.json()
 
@@ -43,28 +45,35 @@ async def get_directory_tree(
     return data["message"]
 
 @mcp.tool()
-def get_file_content(repo_url: str, file_path: str = "directory_tree") -> str:
-    """Get content of a file from a processed repository.
+def get_file_contents(
+    owner: str,
+    repo: str,
+    path: str = "",
+    ref: str = "",
+) -> str:
+    """
+    Get a file or directory from the repo
 
     Args:
-        repo_url: a valid GitHub repository link
-        file_path: a valid, existing path to a file (no leading or trailing "/")
-                    (By default, it will return the tree directory)
-    Return:
-        str: the full content of that file in plain text
-    """
+        owner: Repository owner (username/organization)
+        repo: Repository name
+        path: Path to file/directory
+        ref: The name of the commit/branch/tag. Default: the repository’s default branch
 
-    payload = {
-        "repo_url": repo_url,
-        "file_path": file_path
-    }
-    url = f"{root_url}/api/v1/get-file"
-    response = requests.get(url, json=payload, timeout=30)
+    Return:
+        str: the content of the file or directory requested
+    """
+    # Add a check for owner + repo fields, they're required
+    if not repo or not owner:
+        return "repo and owner fields are required"
+    
+    url = f"{root_url}/api/v1/contents/{owner}/{repo}?ref={ref}&path={path}"
+    response = requests.get(url, timeout=30)
     data = response.json()
 
     # wait for response, and get the file content
     if data["message"] == "Success":
-        return data["content"]
+        return data["contents"]
     
     return data["message"]
 

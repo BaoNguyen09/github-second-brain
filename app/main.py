@@ -1,7 +1,6 @@
 from fastapi import Depends, FastAPI, HTTPException, Path, Response, status, BackgroundTasks
 from pydantic import BaseModel, HttpUrl
-from app.internal_tools.github_api_client import fetch_issue_context, GitHubApiError, fetch_directory_tree_with_depth
-from app.internal_tools.process_repo import ingest_repo, get_directory_structure, is_processed_repo, get_a_file_content
+from app.internal_tools.github_api_client import fetch_issue_context, GitHubApiError, fetch_directory_tree_with_depth, fetch_file_contents
 from typing import List, Optional
 import httpx
 
@@ -39,40 +38,7 @@ async def get_http_client():
 
 @app.get("/")
 async def root():
-    return {"message": "Hello World"}
-
-@app.post("/api/v1/process", status_code=200)
-async def process_repo(repo_req: RepoRequest, response: Response):
-    # This method will return 200 if the repo is already processed
-    # If it wasn't processed, it will be ingested and return 201
-    # Else it will return some error messages
-
-    repo_url_str = str(repo_req.repo_url)
-    # Get all processed repo and check if incoming repo was processed
-    try:
-        res = ingest_repo(repo_url_str)
-        if res[0]: # Should return True only on successful *new* processing
-            response.status_code = status.HTTP_201_CREATED
-            return {
-                "message": f"Repository {repo_url_str} ingested successfully.", 
-                "output_path": res[2]
-                }
-        
-        else:
-            if res[1] == "Repository was processed previously.":
-                return {
-                    "message": res[1],
-                    "output_path": res[2]
-                    }
-            
-            # Handle different error cases
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            return {"message": res[1]}
-        
-    except Exception as e:
-         print(f"ERROR in API processing {repo_url_str}: {e}") # Log the error
-         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-         return {"message": f"Failed to process repository {repo_url_str} due to an internal error."}
+    return {"message": "Welcome to GitHub Second Brain!"}
 
 @app.get("/api/v1/directory-tree/{owner}/{repo}", status_code=200)
 async def get_tree(
@@ -81,12 +47,13 @@ async def get_tree(
     repo: str = Path(..., description="The name of the GitHub repository."),
     ref: str = None,
     depth: int = 1,
+    full_depth: bool = False,
     client: httpx.AsyncClient = Depends(get_http_client),
 ):
     try:
         if ref == "":
             ref = None
-        tree = await fetch_directory_tree_with_depth(owner, repo, client, ref, GITHUB_TOKEN, depth)
+        tree = await fetch_directory_tree_with_depth(owner, repo, client, ref, GITHUB_TOKEN, depth, full_depth)
         if "Directory structure:" in tree:
             return {"message": "Success", "directory tree": tree}
         
@@ -98,34 +65,24 @@ async def get_tree(
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         return {"message": error}
     
-@app.get("/api/v1/get-file", status_code=200)
-def get_file_content(repo_req: RepoRequest, response: Response, background_tasks: BackgroundTasks):
-    repo_url_str = str(repo_req.repo_url)
-    file_path = repo_req.file_path
+@app.get("/api/v1/contents/{owner}/{repo}", status_code=200)
+async def get_contents(
+    response: Response,
+    owner: str = Path(..., description="The owner of the GitHub repository."),
+    repo: str = Path(..., description="The name of the GitHub repository."),
+    path: str = "",
+    ref: str = None,
+    client: httpx.AsyncClient = Depends(get_http_client),
+):
+    if ref == "":
+        ref = None
+    contents = await fetch_file_contents(owner, repo, path, client, ref, GITHUB_TOKEN)
+    if contents is not None:
+        return {"message": "Success", "contents": contents[0]}
     
-    # check if incoming repo was processed
-    try:
-        if not file_path:
-            raise HTTPException(status_code=400, detail="file_path is required")
-        processing_status = is_processed_repo(repo_url_str, True)
-        if processing_status:
-            return {
-                "message": "Success",
-                "content": get_a_file_content(repo_url_str, file_path)
-            }
+    response.status_code = status.HTTP_404_NOT_FOUND
+    return {"message": contents[1]}
 
-        # Else, return a response and process the repo in background
-        background_tasks.add_task(process_repo, repo_req, response)
-        response.status_code = status.HTTP_202_ACCEPTED
-        return {
-            "message": f"Repository {repo_url_str} is being processed now, come back later.",
-        }
-        
-    except Exception as e:
-         print(f"ERROR in API content fetching for repo '{repo_url_str}': {e}") # Log the error
-         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-         return {"message": f"Failed to fetch a file content from {repo_url_str} due to an internal error."}
-    
 @app.get("/api/v1/issue-context/{owner}/{repo}/{issue_number}",
            response_model=GitHubIssueContextResponse,
            summary="Get context for a specific GitHub issue including title, body, and comments.",
