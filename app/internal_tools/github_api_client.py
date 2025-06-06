@@ -296,16 +296,17 @@ async def fetch_directory_tree_with_depth(
     ref: Optional[str] = None,
     github_token: Optional[str] = None,
     depth: Optional[int] = 1,
-) -> List[Dict[str, Any]]: # Returns a list of tree entries
+) -> str:
     """
     Fetch the tree from github and format it to be LLM-friendly
 
     Args:
-        owner: The owner of the GitHub repository.
-        repo: The name of the GitHub repository.
-        http_client: An instance of httpx.AsyncClient for making requests.
+        owner: The owner of the GitHub repository
+        repo: The name of the GitHub repository
+        http_client: An instance of httpx.AsyncClient for making requests
         ref: Branch name, tag, or commit SHA of specified tree
-        github_token: Optional GitHub API token for authentication.
+        github_token: Optional GitHub API token for authentication
+        depth: The specified depth of the tree in int
 
     Returns:
         A string representing the formatted directory tree.
