@@ -6,36 +6,7 @@ import requests
 
 # Initialize FastMCP server
 mcp = FastMCP("Github-Second-Brain")
-root_url = os.getenv("GHSB_API_ENDPOINT", "http://127.0.0.2:8080")
-@mcp.tool()
-def get_processed_repo(repo_url: str) -> str:
-    """Get repository that was processed and stored.
-    TODO: i need a way to handle unprocessed repo, 
-          otherwise it the tool call will time out
-
-    Args:
-        repo_url: a valid GitHub repository link
-
-    Return:
-        str: the full content of file containing processed data
-    """
-
-    payload = {
-        "repo_url": repo_url
-    }
-    url = f"{root_url}/api/v1/process"
-    response = requests.post(url, json=payload, timeout=30)
-    data = response.json()
-    # wait for response, and get the filename
-    if "output_path" in data:
-        output_path = data["output_path"]
-        # then search in data folder for that file and return the content
-        with open(output_path, "r", encoding='utf-8') as file:
-            content = file.read()
-
-        return content if content else "Couldn't read the file"
-    
-    return data["message"]
+root_url = os.getenv("GHSB_API_ENDPOINT", "http://127.0.0.1:8080")
 
 @mcp.tool()
 async def get_directory_tree(
@@ -69,7 +40,6 @@ async def get_directory_tree(
         return data["directory tree"]
     
     return data["message"]
-
 
 @mcp.tool()
 def get_file_content(repo_url: str, file_path: str = "directory_tree") -> str:
@@ -136,7 +106,7 @@ def get_issue_context(repo_url: str, issue_number: str) -> Dict[str, Any]:
         }
 
     # 3. Construct the URL for the FastAPI endpoint
-    api_endpoint_url = f"{root_url}/api/v1/github/issue-context/{owner}/{repo_name}/{issue_num_int}"
+    api_endpoint_url = f"{root_url}/api/v1/issue-context/{owner}/{repo_name}/{issue_num_int}"
 
     # 4. Call the FastAPI endpoint
     try:
@@ -163,34 +133,6 @@ def get_issue_context(repo_url: str, issue_number: str) -> Dict[str, Any]:
                 "If the problem persists, the backend service might be experiencing issues."
             )
         }
-
-@mcp.resource("ghsb://digest/{repo_owner}/{repo_name}")
-def get_processed_repo(repo_owner: str, repo_name: str) -> str | dict:
-    """Get repository that was processed and stored.
-
-    Args:
-        repo_owner: a GitHub username of the repo owner
-        repo_name: the name of the GitHub repository
-
-    Return:
-        str: the file containing processed data
-    """
-    repo_url = f"https://github.com/{repo_owner}/{repo_name}"
-    payload = {
-        "repo_url": repo_url
-    }
-    url = f"{root_url}/api/v1/process"
-    response = requests.post(url, json=payload)
-    data = response.json()
-    # wait for response, and get the filename
-    if "output_path" in data:
-        output_path = data["output_path"]
-        # then search in data folder for that file and return the content
-        with open(output_path, "r", encoding='utf-8') as file:
-            content = file.read()
-        return content if content else None
-    
-    return {"message": data["message"]}
 
 if __name__ == "__main__":
     print("MCP Server script starting...", file=sys.stderr)
