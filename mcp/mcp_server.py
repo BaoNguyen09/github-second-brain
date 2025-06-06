@@ -7,6 +7,7 @@ import requests
 # Initialize FastMCP server
 mcp = FastMCP("Github-Second-Brain")
 root_url = os.getenv("GHSB_API_ENDPOINT", "http://127.0.0.1:8080")
+github_token = os.getenv("GITHUB_PERSONAL_ACCESS_TOKEN", "")
 
 @mcp.tool()
 async def get_directory_tree(
