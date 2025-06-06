@@ -1,6 +1,6 @@
 from fastapi import Depends, FastAPI, HTTPException, Path, Response, status, BackgroundTasks
 from pydantic import BaseModel, HttpUrl
-from app.internal_tools.github_api_client import fetch_issue_context, GitHubApiError
+from app.internal_tools.github_api_client import fetch_issue_context, GitHubApiError, fetch_directory_tree_with_depth
 from app.internal_tools.process_repo import ingest_repo, get_directory_structure, is_processed_repo, get_a_file_content
 from typing import List, Optional
 import httpx
@@ -73,31 +73,28 @@ async def process_repo(repo_req: RepoRequest, response: Response):
          print(f"ERROR in API processing {repo_url_str}: {e}") # Log the error
          response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
          return {"message": f"Failed to process repository {repo_url_str} due to an internal error."}
-    
-@app.get("/api/v1/dir-tree", status_code=200)
-def get_dir_tree(repo_req: RepoRequest, response: Response, background_tasks: BackgroundTasks):
-    repo_url_str = str(repo_req.repo_url)
 
-    # check if incoming repo was processed
+@app.get("/api/v1/directory-tree/{owner}/{repo}", status_code=200)
+async def get_tree(
+    response: Response,
+    owner: str = Path(..., description="The owner of the GitHub repository."),
+    repo: str = Path(..., description="The name of the GitHub repository."),
+    ref: str = None,
+    depth: int = 1,
+    client: httpx.AsyncClient = Depends(get_http_client),
+):
     try:
-        processing_status = is_processed_repo(repo_url_str, True)
-        if processing_status:
-            return {
-                "message": "Success",
-                "directory_tree": get_directory_structure(repo_url_str)
-            }
-
-        # Else, return a response and process the repo in background
-        background_tasks.add_task(process_repo, repo_req, response)
-        response.status_code = status.HTTP_202_ACCEPTED
-        return {
-            "message": f"Repository {repo_url_str} is being processed now, come back later.",
-        }
+        tree = await fetch_directory_tree_with_depth(owner, repo, client, ref, GITHUB_TOKEN, depth)
+        if "Directory structure:" in tree:
+            return {"message": "Success", "directory tree": tree}
         
+        return {"message": tree}
+    
     except Exception as e:
-         print(f"ERROR in API tree fetching for repo '{repo_url_str}': {e}") # Log the error
-         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-         return {"message": f"Failed to fetch directory tree of {repo_url_str} due to an internal error."}
+        error = f"ERROR in API tree fetching for /{owner}/{repo}/{ref} with depth {depth}: {e}"
+        print(error) # Log the error
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        return {"message": error}
     
 @app.get("/api/v1/get-file", status_code=200)
 def get_file_content(repo_req: RepoRequest, response: Response, background_tasks: BackgroundTasks):

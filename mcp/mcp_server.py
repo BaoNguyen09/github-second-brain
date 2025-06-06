@@ -38,38 +38,29 @@ def get_processed_repo(repo_url: str) -> str:
     return data["message"]
 
 @mcp.tool()
-def get_directory_tree(repo_url: str) -> str:
-    """Get directory tree of repository that was processed.
-
-    Args:
-        repo_url: a valid GitHub repository link
-
-    Return:
-        str: the full content of directory tree
-    """
-
-    payload = {
-        "repo_url": repo_url
-    }
-    url = f"{root_url}/api/v1/dir-tree"
-    response = requests.get(url, json=payload, timeout=30)
-    data = response.json()
-
-    # wait for response, and get the file content
-    if data["message"] == "Success":
-        return data["directory_tree"]
-    
-    return data["message"]
-
-@mcp.tool()
-async def get_directory_tree_with_depth(
+async def get_directory_tree(
     owner: str,
     repo: str,
     ref: str = None,
     depth: int = 1
 ) -> str:
+    """
+    Get directory tree of repository with specified depth
+
+    Args:
+        owner: The owner of the GitHub repository
+        repo: The name of the GitHub repository
+        ref: Branch name, tag, or commit SHA of specified tree
+        depth: The specified depth of the tree in int
+
+    Return:
+        str: the directory tree with specified depth as a string
+    """
     # Add a check for owner + repo fields, they're required
-    url = f"{root_url}/api/v1/get-tree/{owner}/{repo}?ref={ref}&depth={depth}"
+    if not repo or not owner:
+        return "repo and owner fields are required"
+    
+    url = f"{root_url}/api/v1/directory-tree/{owner}/{repo}?ref={ref}&depth={depth}"
     response = requests.get(url, timeout=30)
     data = response.json()
 
