@@ -84,6 +84,8 @@ async def get_tree(
     client: httpx.AsyncClient = Depends(get_http_client),
 ):
     try:
+        if ref == "":
+            ref = None
         tree = await fetch_directory_tree_with_depth(owner, repo, client, ref, GITHUB_TOKEN, depth)
         if "Directory structure:" in tree:
             return {"message": "Success", "directory tree": tree}

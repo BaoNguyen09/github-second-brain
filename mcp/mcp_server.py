@@ -12,7 +12,7 @@ root_url = os.getenv("GHSB_API_ENDPOINT", "http://127.0.0.1:8080")
 async def get_directory_tree(
     owner: str,
     repo: str,
-    ref: str = None,
+    ref: str = "",
     depth: int = 1
 ) -> str:
     """
