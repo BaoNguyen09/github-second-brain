@@ -2,7 +2,7 @@ name: Build and Push Docker image to GHCR
 
 on:
   push:
-    branches: [main]
+    branches: [main, 43-create-workflow-cicd-for-the-mcp-server]
 
 jobs:
   build-and-push:
