@@ -20,6 +20,22 @@
   </p>
 </div>
 
+## Recent Major Update
+<details>
+
+
+<summary> This project underwent a major refactor in June 8th, 2025. </summary>
+
+- **Legacy version**: Available on `legacy/v1-archive` branch
+- **Current version**: Main branch (v2.0+)
+- **Migration guide**: See [MIGRATION.md](MIGRATION.md)
+
+### Branch Information
+- `main` - Current refactored version
+- `legacy/v1-archive` - Original architecture (frozen)
+  
+</details>
+
 ## Project Launch
 <video align="center" src="https://github.com/user-attachments/assets/9999fb6a-d710-4924-88f9-dae5d239322e" width="80%"></video>
 
