@@ -130,8 +130,8 @@ We are continuously working to improve GitHub Second Brain. Here are some of our
 
 - [x] ~~Add a mcp tool to retrieve file contents and tree directory with specified depth~~
 - [ ] Add a mcp tool to trieve ~~github issues~~ + pull request
-- [x] Change the current gitingest processing to directly use github api for faster response
-- [ ] Change the architecture of the project to be completely self-hosted (data never leaves your machine)
+- [x] ~~Change the current gitingest processing to directly use github api for faster response~~
+- [x] ~~Change the architecture of the project to be completely self-hosted (data never leaves your machine)~~
 
 For a more detailed view of our upcoming features and to suggest new ones, please see the open issues and our project board.
 
