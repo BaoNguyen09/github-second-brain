@@ -30,7 +30,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./mcp/Dockerfile
+          file: ./Dockerfile
           push: true
           tags: |
             ghcr.io/baonguyen09/github-second-brain:latest
