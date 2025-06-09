@@ -52,7 +52,7 @@ This project develops tools for targeted, on-demand data extraction from diverse
 
 * 🧠 **No More Hallucinations**: With Github Second Brain, your AI assistant can provide accurate and relevant answers to your questions.
 
-* ✅ **Open, Free, and Private**: Github Second Brain is open-source and completely free to use. It doesn't collect personal information or store queries. You can even self-host it!
+* ✅ **Open, Free, and Private**: Github Second Brain is open-source and completely free to use. It doesn't collect personal information or store queries. This is completely self-hosted!
 
 * Extracting and analyzing data from GitHub repositories.
 
