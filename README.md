@@ -47,6 +47,9 @@ This project develops tools for targeted, on-demand data extraction from diverse
 Before you begin, ensure you have met the following requirements:
 1. To run the server in a container, you will need to have [Docker](https://www.docker.com/) installed.
 2. Once Docker is installed, you will also need to ensure Docker is running. The image is public; if you get errors on pull, you may need to `docker logout ghcr.io`.
+3. Lastly you will need to [Create a GitHub Personal Access Token](https://github.com/settings/personal-access-tokens/new).
+The MCP server can use many of the GitHub APIs, so enable the permissions that you feel comfortable granting your AI tools (to learn more about access tokens, please check out the [documentation](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)).
+
 
 ## 🚀 Installation
 
@@ -62,8 +65,13 @@ Before you begin, ensure you have met the following requirements:
           "run",
           "-i",
           "--rm",
-          "ghcr.io/baonguyen09/github-second-brain-mcp"
-      ]
+          "-e",
+          "GITHUB_PERSONAL_ACCESS_TOKEN",
+          "ghcr.io/baonguyen09/github-second-brain:latest"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_PERSONAL_GITHUB_ACCESS_TOKEN"
+      }
     }
   }
 }
@@ -80,8 +88,13 @@ Update your Cursor configuration file at `~/.cursor/mcp.json`:
           "run",
           "-i",
           "--rm",
-          "ghcr.io/baonguyen09/github-second-brain-mcp"
-      ]
+          "-e",
+          "GITHUB_PERSONAL_ACCESS_TOKEN",
+          "ghcr.io/baonguyen09/github-second-brain:latest"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_PERSONAL_GITHUB_ACCESS_TOKEN"
+      }
     }
   }
 }
@@ -99,9 +112,10 @@ What happens when you use Github Second Brain:
 ## 🗺️ Roadmap
 We are continuously working to improve GitHub Second Brain. Here are some of our planned features:
 
-- [x] ~~Add a mcp tool to retrieve specific file content and tree directory~~
+- [x] ~~Add a mcp tool to retrieve file contents and tree directory with specified depth~~
 - [ ] Add a mcp tool to trieve ~~github issues~~ + pull request
-- [ ] Change the current gitingest processing to async
+- [x] Change the current gitingest processing to directly use github api for faster response
+- [ ] Change the architecture of the project to be completely self-hosted (data never leaves your machine)
 
 For a more detailed view of our upcoming features and to suggest new ones, please see the open issues and our project board.
 
@@ -128,7 +142,7 @@ Please read our Contributing Guidelines for detailed instructions on how to cont
 ## 🛠️ Tools
 Github Second Brain provides AI assistants with several valuable tools to help them access, understand, and query GitHub repositories.
 
-### `get_processed_repo` (deprecated soon)
+### `get_processed_repo` (deprecated)
 
 - This tool gives AI the entire codebase ingested into one prompt-friendly text file. It works by ingesting the entire codebase with gitingest library and serving it directly. This gives the AI a good comprehensive look of what the project is about. However, this tool isn't recommended and will soon be disabled because it can easily overflow AI with data, exceeding its Context Window Limit.
 
@@ -140,9 +154,9 @@ Github Second Brain provides AI assistants with several valuable tools to help t
 
 - **When it's useful:** For questions about the structure of the repositories.
 
-### `get_file_content`
+### `get_file_contents`
 
-- This tool returns full content of any files visible in the tree directory in plaintext.
+- This tool returns full content of any files/directories existing in the repository.
 
 - **When it's useful:** For specific questions about particular features, functions, concepts within a project, or any technical details not coverted in the documentation.
 
