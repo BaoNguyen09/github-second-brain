@@ -1,7 +1,7 @@
 import sys
 import httpx
 from typing import List, Optional, Dict, Any
-from custom_errors import GitHubApiError
+from tools.custom_errors import GitHubApiError
 
 
 def _build_hierarchical_tree(flat_tree_list: List[Dict[str, Any]]) -> Dict[str, Any]:

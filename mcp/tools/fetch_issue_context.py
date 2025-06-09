@@ -1,6 +1,6 @@
 import httpx
 from typing import List, Optional, Dict, Any
-from custom_errors import GitHubApiError
+from tools.custom_errors import GitHubApiError
 
 async def _fetch_all_paginated_comments(
     start_url: str,

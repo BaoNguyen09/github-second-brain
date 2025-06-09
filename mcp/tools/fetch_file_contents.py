@@ -1,8 +1,8 @@
 import sys
 import httpx
 from typing import Optional, Tuple
-from custom_errors import GitHubApiError
-from fetch_directory_tree import format_github_tree_structure
+from tools.custom_errors import GitHubApiError
+from tools.fetch_directory_tree import format_github_tree_structure
 
 async def fetch_file_contents(
     owner: str,
@@ -24,7 +24,8 @@ async def fetch_file_contents(
         github_token: Optional GitHub API token for authentication
 
     Returns:
-        A content of the file/directory as string
+        The content of the file/directory as string
+        Boolean as the status of the operation
 
     Raises:
         GitHubApiError: If there's an issue communicating with the GitHub API
