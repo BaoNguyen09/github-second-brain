@@ -2,9 +2,9 @@ FROM python:3.12-alpine3.17
 
 WORKDIR /code
 
-COPY ./tools /code/tools
-COPY ./main.py /code
-COPY ./requirements.txt /code
+COPY ./mcp/tools /code/tools
+COPY ./mcp/main.py /code
+COPY ./mcp/requirements.txt /code
 
 RUN pip install uv
 
