@@ -24,7 +24,7 @@
 <details>
 
 
-<summary> This project underwent a major refactor in June 8th, 2025. </summary>
+<summary> This project underwent a major refactor in June 8th, 2025 (https://github.com/baonguyen09/github-second-brain/issues/42). </summary>
 
 - **Legacy version**: Available on `legacy/v1-archive` branch
 - **Current version**: Main branch (v2.0+)
