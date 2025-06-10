@@ -6,6 +6,8 @@ from pydantic import BaseModel, HttpUrl
 from tools.fetch_file_contents import fetch_file_contents
 from tools.fetch_issue_context import fetch_issue_context
 from tools.fetch_directory_tree import fetch_directory_tree_with_depth
+from tools.fetch_diffs import fetch_diffs
+from tools.custom_errors import GitHubApiError
 
 # Initialize FastMCP server
 mcp = FastMCP("Github-Second-Brain")
@@ -156,6 +158,65 @@ async def get_issue_context(
                 "If the problem persists, the backend service might be experiencing issues."
             )
         }
+
+@mcp.tool()
+async def get_code_diff(
+    owner: str,
+    repo: str,
+    pr_number: int = 0,
+    base_ref: str = "",
+    head_ref: str = ""
+) -> Dict[str, Any]:
+    """
+    Gets the diff content directly from the GitHub API.
+
+    This function operates in two modes:
+    1. PR Mode: If `pr_number` is provided, it fetches the diff for that Pull Request.
+    2. Compare Mode: If `base_ref` and `head_ref` are provided, it fetches the diff
+       between these two commits/branches/tags.
+
+    Args:
+        owner: The owner of the GitHub repository
+        repo: The name of the GitHub repository
+        http_client: An instance of httpx.AsyncClient for making requests
+        github_token: Optional GitHub API token for authentication
+        pr_number: A pull request id number
+        base_ref: Branch name, tag, or commit SHA
+        head_ref: Branch name, tag, or commit SHA
+
+    Returns:
+        A dictionary containing the diff content or an error message.
+    """
+    if not repo or not owner:
+        return {"error": True, "message": "Invalid arguments: repo and owner fields are required"}
+    
+    if not pr_number and not (base_ref and head_ref):
+        return {"error": True, "message": "Invalid arguments: You must provide either 'pr_number' or both 'base_ref' and 'head_ref'."}
+    
+    if pr_number < 0:
+        return {"error": True, "message": "Invalid arguments: 'pr_number' must be a non-negative integer"}
+
+    try:
+        async with httpx.AsyncClient() as client:
+            results = await fetch_diffs(
+                owner=owner,
+                repo=repo,
+                http_client=client,
+                github_token=github_token,
+                pr_number=pr_number,
+                base_ref=base_ref,
+                head_ref=head_ref
+            )
+        return results
+    
+    except GitHubApiError as e:
+        print(f"GitHubApiError in diff tool: {e}", file=sys.stderr)
+        return {"error": True, "message": f"Failed to fetch diff from GitHub API: {str(e)}", "details": e.details}
+    except Exception as e:
+        print(f"Unexpected error in get_code_diff tool: {type(e).__name__} - {e}", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
+        return {"error": True, "message": "An unexpected server-side error occurred while processing the diff."}
+
 
 if __name__ == "__main__":
     print("MCP Server script starting...", file=sys.stderr)
