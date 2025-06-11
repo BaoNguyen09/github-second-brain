@@ -170,7 +170,7 @@ Github Second Brain provides AI assistants with several valuable tools to help t
 
 - **When it's useful:** For questions about the structure of the repositories.
 
-### `get_file_contents`
+### `get_repo_contents`
 
 - This tool returns full content of any files/directories existing in the repository.
 

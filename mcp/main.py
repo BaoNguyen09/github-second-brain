@@ -72,7 +72,7 @@ async def get_directory_tree(
     
 
 @mcp.tool()
-async def get_file_contents(
+async def get_repo_contents(
     owner: str,
     repo: str,
     path: str = "",
