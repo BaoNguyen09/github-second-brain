@@ -182,14 +182,19 @@ Github Second Brain provides AI assistants with several valuable tools to help t
 
 - **When it's useful:** For questions related to a github issue and the context around it.
 
+### `get_code_diff`
+
+- This tool returns detailed diff of any github pull request, different branches, tags, and commits
+
+- **When it's useful:** For questions related to a github pull request or code versions (between branches/tags/releases)
+
 ## 📝 License
 This project is licensed under the [Apache License 2.0](LICENSE).
 
 ## 🙏 Acknowledgments
 We would like to thank the following individuals and projects for their contributions and inspiration:
 
-- Gitingest for the underlying tool.
-- GitMCP for reference and setting the standards.
+- GitMCP for reference
 - Official GitHub MCP Server
 - All our amazing contributors!
 
