@@ -1,6 +1,7 @@
 import os, sys, traceback
 from typing import Any, Dict, List, Optional
 from fastmcp import FastMCP
+from fastmcp.prompts.prompt import Message
 import httpx
 from pydantic import BaseModel, HttpUrl
 from tools.fetch_file_contents import fetch_file_contents
@@ -8,6 +9,7 @@ from tools.fetch_issue_context import fetch_issue_context
 from tools.fetch_directory_tree import fetch_directory_tree_with_depth
 from tools.fetch_diffs import fetch_diffs
 from tools.custom_errors import GitHubApiError
+from prompt import base_prompt
 
 # Initialize FastMCP server
 mcp = FastMCP("Github-Second-Brain")
@@ -217,6 +219,13 @@ async def get_code_diff(
         traceback.print_exc(file=sys.stderr)
         return {"error": True, "message": "An unexpected server-side error occurred while processing the diff."}
 
+@mcp.prompt()
+def analyze_github_repository(
+    focus: str = "Let me explore and decide what's most important for each user's request"
+) -> Message:
+    """Comprehensive guide for analyzing GitHub repositories using all available tools."""
+
+    return Message(f"{base_prompt}\n**Focus area:** {focus}")
 
 if __name__ == "__main__":
     print("MCP Server script starting...", file=sys.stderr)
