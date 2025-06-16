@@ -20,6 +20,7 @@
   </p>
 </div>
 
+
 ## Recent Major Update
 <details>
 
@@ -37,7 +38,7 @@
 </details>
 
 ## Project Launch
-<video align="center" src="https://github.com/user-attachments/assets/9999fb6a-d710-4924-88f9-dae5d239322e" width="80%"></video>
+<video align="center" src="https://github.com/user-attachments/assets/ecb05256-8bb0-427c-b6c4-c7d93762bc67" width="80%"></video>
 
 ## Why?
 ### The Problem
