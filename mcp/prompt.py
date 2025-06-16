@@ -17,9 +17,9 @@ and in what order based on what you discover:
 - TIP: Be strategic - don't read everything, focus on what matters most
 
 **get_issue_context([owner], [repo], issue_number)**
-- WHEN: If you discover issues worth investigating, or if the user mentions any
-- USE FOR: Understanding bugs, feature requests, community discussions/comments
-- TIP: Look for patterns in issues to understand common pain points
+- WHEN: If you discover issues/PR worth investigating, or if the user mentions any
+- USE FOR: Understanding bugs, feature requests, community discussions/comments. This can also be used to read context of a PR
+- TIP: Look for patterns in issues/PRs to understand common pain points
 
 **get_code_diff([owner], [repo], [pr_number], [base_ref], [head_ref])**
 - WHEN: You want to understand recent changes, compare versions, or analyze specific PRs
