@@ -7,7 +7,7 @@
 <h3 align="center">GitHub Second Brain</h3>
 
   <p align="center">    
-    A set of tools that strategically extract only the key information from any codebases, so your AI actually has enough context to assist you.
+    A set of tools that let AI explore github repos on-demand so it can better assist you.
     <br />
     <a href="https://github.com/BaoNguyen09/github-second-brain"><strong>Explore the docs »</strong></a>
     <br />
@@ -42,10 +42,10 @@
 
 ## Why?
 ### The Problem
-Even senior developers struggle with large, unfamiliar, interconnected codebases and their dependencies. For AI, this is even a bigger problem because without enough context, AI can't help, and will hallucinate but with too much, it will exceed its capability (context window limits).
+When I first started contributing to an open-source project to gain more experience, the repo was just too big for a first-timer, and I felt completely overwhelmed. I wanted to use an AI assistant to help me navigate, but I had no good way to provide the necessary context.
 
 ### Solution
-This project develops tools for targeted, on-demand data extraction from diverse raw code repositories. It aims to provide AI clients (LLMs) with concise, query-relevant context/data to enhance understanding of unfamiliar or multiple codebases. This effectively manages token limits problem while complementing other existing AI tools.
+A self-hosted mcp server that gives an AI client a set of tools to explore and understand GitHub repos on its own.
 
 ## ✨ Features
 
