@@ -9,7 +9,7 @@ from tools.fetch_issue_context import fetch_issue_context
 from tools.fetch_directory_tree import fetch_directory_tree_with_depth
 from tools.fetch_diffs import fetch_diffs
 from tools.custom_errors import GitHubApiError
-from prompt import base_prompt
+from tools.prompt import base_prompt
 
 # Initialize FastMCP server
 mcp = FastMCP("Github-Second-Brain")
